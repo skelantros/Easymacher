@@ -2,7 +2,7 @@ package ru.skelantros.easymacher
 
 package object db {
   type DbResult[A] = Either[Error, A]
-  type UnitResult = DbResult[Unit]
+  type DbUnit = DbResult[Unit]
 
   sealed trait Error
   case class Mistake(msg: String) extends Error

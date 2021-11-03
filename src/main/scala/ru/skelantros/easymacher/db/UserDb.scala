@@ -11,13 +11,13 @@ object UserDb {
   }
 
   trait Update[F[_]] {
-    def updatePassword(id: Int, oldPassword: String, newPassword: String): F[UnitResult]
-    def updateInfo(id: Int, firstName: Option[String] = None, lastName: Option[String] = None): F[UnitResult]
-    def updateRole(id: Int, role: Role): F[UnitResult]
+    def updatePassword(id: Int, oldPassword: String, newPassword: String): F[DbUnit]
+    def updateInfo(id: Int, firstName: Option[String] = None, lastName: Option[String] = None): F[DbUnit]
+    def updateRole(id: Int, role: Role): F[DbUnit]
 
-    def createUser(username: String, password: String, email: String, role: Role): F[UnitResult]
-    def activateUser(uuid: String): F[UnitResult]
+    def createUser(username: String, password: String, email: String, role: Role): F[DbUnit]
+    def activateUser(uuid: String): F[DbUnit]
 
-    def deleteUser(id: Int): F[UnitResult]
+    def deleteUser(id: Int): F[DbUnit]
   }
 }
