@@ -1,10 +1,14 @@
 package ru.skelantros.easymacher.entities
 
-sealed trait DbResult
+sealed trait DbResult extends Product with Serializable
 
 object DbResult {
-  case object Success extends DbResult
-  case class Error(t: Throwable) extends DbResult
+  private case object Success extends DbResult
+  private case class Thr(t: Throwable) extends DbResult
+  private case class UserMistake(msg: String) extends DbResult
 
-  val notImplemented: DbResult = Error(new NotImplementedError)
+  val notImplemented: DbResult = Thr(new NotImplementedError)
+  val success: DbResult = Success
+  def thr(t: Throwable): DbResult = Thr(t)
+  def mistake(msg: String): DbResult = UserMistake(msg)
 }
