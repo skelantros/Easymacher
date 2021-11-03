@@ -14,10 +14,11 @@ object UserDb {
     def updatePassword(id: Int, oldPassword: String, newPassword: String): F[DbUnit]
     def updateInfo(id: Int, firstName: Option[String] = None, lastName: Option[String] = None): F[DbUnit]
     def updateRole(id: Int, role: Role): F[DbUnit]
+    def deleteUser(id: Int): F[DbUnit]
+  }
 
+  trait Register[F[_]] {
     def createUser(username: String, password: String, email: String, role: Role): F[DbUnit]
     def activateUser(uuid: String): F[DbUnit]
-
-    def deleteUser(id: Int): F[DbUnit]
   }
 }
