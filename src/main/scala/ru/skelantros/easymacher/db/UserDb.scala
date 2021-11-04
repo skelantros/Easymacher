@@ -10,6 +10,11 @@ object UserDb {
     def userByUsername(username: String): F[DbResult[Option[User]]]
   }
 
+  trait SelectOffset[F[_]] {
+    def allUsers(from: Int, count: Int): F[DbResult[Seq[User]]]
+    def usersByRole(role: Role)(from: Int, count: Int): F[DbResult[Seq[User]]]
+  }
+
   trait Update[F[_]] {
     def updatePassword(id: Int, oldPassword: String, newPassword: String): F[DbUnit]
     def updateInfo(id: Int, firstName: Option[String] = None, lastName: Option[String] = None): F[DbUnit]
