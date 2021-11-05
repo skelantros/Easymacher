@@ -12,10 +12,10 @@ import ru.skelantros.easymacher.{CommonSpec, DbMocks}
 
 class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   val usersSample = Seq(
-    User(1, "skelantros", "skelantros@easymacher.ru", Role.Admin, true, Some("Alex"), Some("Egorowski")),
-    User(2, "adefful", "ad3fful@easymacher.ru", Role.User, true, Some("Alex"), None),
-    User(3, "g03th3", "g03th3@klassik.de", Role.User, true, None, None),
-    User(4, "damned", "damned@mail.ru", Role.User, false, None, None)
+    User(1, "skelantros", "skelantros@easymacher.ru", "23052001", Role.Admin, true, Some("Alex"), Some("Egorowski")),
+    User(2, "adefful", "ad3fful@easymacher.ru", "1234", Role.User, true, Some("Alex"), None),
+    User(3, "g03th3", "g03th3@klassik.de", "5678", Role.User, true, None, None),
+    User(4, "damned", "damned@mail.ru", "xd", Role.User, false, None, None)
   )
   val services = new UserServices[IO]
 
