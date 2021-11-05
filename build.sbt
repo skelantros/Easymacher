@@ -23,5 +23,12 @@ lazy val doobieDependencies = Seq(
   "org.tpolecat" %% "doobie-specs2"   % doobieVersion
 )
 
+lazy val scalatestVersion = "3.2.10"
+lazy val scalatestDependencies = Seq(
+  "org.scalactic" %% "scalactic" % scalatestVersion,
+  "org.scalatest" %% "scalatest" % scalatestVersion % "test"
+)
+
 libraryDependencies ++= http4sDependencies
 libraryDependencies ++= doobieDependencies
+libraryDependencies ++= scalatestDependencies
