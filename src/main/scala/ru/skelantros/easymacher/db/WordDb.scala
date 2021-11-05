@@ -5,7 +5,7 @@ import ru.skelantros.easymacher.entities.{Noun, User, Word}
 object WordDb {
   trait Select[F[_]] {
     def allWords: F[DbResult[Seq[Word]]]
-    def wordById(id: Int): F[DbResult[Option[Word]]]
+    def wordById(id: Int): F[DbResult[Word]]
     def wordsByUserId(userId: Int): F[DbResult[Seq[Word]]]
     def wordsByUser(user: User): F[DbResult[Seq[Word]]] = wordsByUserId(user.id)
   }

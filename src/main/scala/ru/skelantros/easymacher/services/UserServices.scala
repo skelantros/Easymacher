@@ -44,12 +44,12 @@ class UserServices[F[_] : Monad] {
 
   def byId(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case GET -> Root / "user" :? IdParam(id) =>
-      processDbDef(db.userById(id))(_ map userLight)
+      processDbDef(db.userById(id))(userLight)
   }
 
   def byUsername(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case GET -> Root / "user" :? UsernameParam(username) =>
-      processDbDef(db.userByUsername(username))(_ map userLight)
+      processDbDef(db.userByUsername(username))(userLight)
   }
 }
 
