@@ -59,7 +59,7 @@ object DbMocks {
               val fnCh = firstName.map(n => user.copy(firstName = Some(n))).getOrElse(user)
               val lnCh = lastName.map(n => fnCh.copy(lastName = Some(n))).getOrElse(fnCh)
               val usCh = username.map { n =>
-                if(db.map(_.username).contains(n)) DbResult.mistake[User](s"User with username '$username' already exists.")
+                if(db.map(_.username).contains(n)) DbResult.mistake[User](s"User with username '$n' already exists.")
                 else DbResult.of[User](lnCh.copy(username = n))
               }.getOrElse(DbResult.of(lnCh))
               val emCh: DbResult[User] = usCh.flatMap { user =>
