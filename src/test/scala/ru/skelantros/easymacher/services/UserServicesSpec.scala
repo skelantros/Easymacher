@@ -6,8 +6,9 @@ import org.http4s.circe._
 import org.http4s.implicits._
 import org.http4s._
 import org.scalatest.flatspec.AnyFlatSpec
+import ru.skelantros.easymacher.db.DbResult
 import ru.skelantros.easymacher.entities.{Role, User}
-import ru.skelantros.easymacher.services.UserServices.UserLight
+import ru.skelantros.easymacher.services.UserServices.{UpdInfo, UpdPassword, UserLight}
 import ru.skelantros.easymacher.{CommonSpec, DbMocks}
 
 class UserServicesSpec extends AnyFlatSpec with CommonSpec {
@@ -19,10 +20,8 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   )
   val services = new UserServices[IO]
 
-  implicit val lightEncoder: EntityEncoder[IO, UserLight] = jsonEncoderOf
   implicit val seqLightEncoder: EntityEncoder[IO, Seq[UserLight]] = jsonEncoderOf
   implicit val optLightEncoder: EntityEncoder[IO, Option[UserLight]] = jsonEncoderOf
-  implicit val lightDecoder: EntityDecoder[IO, UserLight] = jsonOf
   implicit val seqLightDecoder: EntityDecoder[IO, Seq[UserLight]] = jsonOf
   implicit val optLightDecoder: EntityDecoder[IO, Option[UserLight]] = jsonOf
 
@@ -107,5 +106,55 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     check(actualResp, Status.BadRequest,
       Some("User with username 'whoisthat' does not exist.")
     )
+  }
+
+  "updatePassword" should "update password for existing users correctly" in {
+    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    val body = UpdPassword("23052001", "2305")
+    val req = Request[IO](method = Method.POST, uri=uri"/update-password").withEntity(body)
+    val actualResp = services.updatePassword(usersSample.head).orNotFound.run(req)
+    check(actualResp, Status.Ok, Option(()))
+    // check if user has been changed in DB
+    db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head.copy(password = "2305"))
+  }
+
+  it should "not accept requests with wrong password" in {
+    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    val body = UpdPassword("2305201", "2305")
+    val req = Request[IO](method = Method.POST, uri=uri"/update-password").withEntity(body)
+    val actualResp = services.updatePassword(usersSample.head).orNotFound.run(req)
+    check(actualResp, Status.BadRequest, Option("Wrong password."))
+    // check if user has not been changed in DB
+    db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head)
+  }
+
+  "updateInfo" should "correctly change 'simple' parameters" in {
+    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    val body = UpdInfo(None, None, Some("Alexander"), None)
+    val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
+    val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
+    check(actualResp, Status.Ok, Option(()))
+    // check if user has been changed in DB
+    db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head.copy(firstName = Some("Alexander")))
+  }
+
+  it should "correctly change 'complex' parameters" in {
+    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    val body = UpdInfo(None, Some("Skel"), None, None)
+    val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
+    val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
+    check(actualResp, Status.Ok, Option(()))
+    // check if user has been changed in DB
+    db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head.copy(username = "Skel"))
+  }
+
+  it should "change parameters in transaction (if something goes wrong, nothing changes)" in {
+    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    val body = UpdInfo(None, Some("adefful"), Some("Alexander"), None)
+    val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
+    val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
+    check(actualResp, Status.BadRequest, Option("User with username 'adefful' already exists."))
+    // check if nothing has been changed in DB
+    db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head)
   }
 }
