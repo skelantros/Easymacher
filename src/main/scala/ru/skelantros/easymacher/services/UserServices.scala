@@ -12,11 +12,7 @@ import ru.skelantros.easymacher.entities.{Role, User}
 class UserServices[F[_] : Monad] {
   val dsl = new Http4sDsl[F] {}
   import dsl._
-
-  private case class UserLight(id: Int, username: String, role: Role,
-                               firstName: Option[String], lastName: Option[String])
-  private def userLight(user: User) =
-    UserLight(user.id, user.username, user.role, user.firstName, user.lastName)
+  import UserServices._
 
   private implicit val lightEncoder: EntityEncoder[F, UserLight] = jsonEncoderOf
   private implicit val seqLightEncoder: EntityEncoder[F, Seq[UserLight]] = jsonEncoderOf
@@ -55,4 +51,11 @@ class UserServices[F[_] : Monad] {
     case GET -> Root / "user" :? UsernameParam(username) =>
       processDbDef(db.userByUsername(username))(_ map userLight)
   }
+}
+
+object UserServices {
+  case class UserLight(id: Int, username: String, role: Role,
+                       firstName: Option[String], lastName: Option[String])
+  def userLight(user: User) =
+    UserLight(user.id, user.username, user.role, user.firstName, user.lastName)
 }
