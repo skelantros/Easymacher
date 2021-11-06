@@ -6,6 +6,7 @@ import cats.implicits._
 import scala.collection.mutable
 import ru.skelantros.easymacher.db.{DbResult, DbUnit, UserDb}
 import ru.skelantros.easymacher.entities.{Role, User}
+import ru.skelantros.easymacher.utils.Email
 
 object DbMocks {
   def userDbSelect[F[_] : Monad](init: Seq[User]) =
@@ -32,8 +33,8 @@ object DbMocks {
         }
       }
 
-      override def userByEmail(email: String): F[DbResult[User]] = Monad[F].pure {
-        db.find(_.email.toLowerCase == email.toLowerCase) match {
+      override def userByEmail(email: Email): F[DbResult[User]] = Monad[F].pure {
+        db.find(_.email.toLowerCase == email.asString) match {
           case Some(x) => DbResult.of(x)
           case None => DbResult.mistake(s"User with email '$email' does not exist.")
         }

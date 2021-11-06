@@ -1,6 +1,7 @@
 package ru.skelantros.easymacher.db
 
 import ru.skelantros.easymacher.entities.{Role, User}
+import ru.skelantros.easymacher.utils.Email
 
 object UserDb {
   trait Select[F[_]] {
@@ -8,7 +9,7 @@ object UserDb {
     def usersByRole(role: Role): F[DbResult[Seq[User]]]
     def userById(id: Int): F[DbResult[User]]
     def userByUsername(username: String): F[DbResult[User]]
-    def userByEmail(email: String): F[DbResult[User]]
+    def userByEmail(email: Email): F[DbResult[User]]
   }
 
   trait SelectOffset[F[_]] {
