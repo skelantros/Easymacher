@@ -7,7 +7,7 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.circe._
 import io.circe.generic.auto._
 import cats.implicits._
-import ru.skelantros.easymacher.db.UserDb.{Select, SelectOffset, Update}
+import ru.skelantros.easymacher.db.UserDb._
 import ru.skelantros.easymacher.entities.{Role, User}
 import ru.skelantros.easymacher.utils.Email
 
@@ -82,6 +82,20 @@ class UserServices[F[_] : Concurrent] {
         }
       }
   }
+
+  def createUser(implicit db: Register[F]): HttpRoutes[F] = HttpRoutes.of[F] {
+    case req @ POST -> Root / "register" =>
+      val body = req.as[CreateUser]
+      body.flatMap { createUser =>
+        val CreateUser(username, password, email) = createUser
+        processDbEmail(email, db.createUser(username, password, _, Role.User))(identity)
+      }
+  }
+
+  def activateUser(implicit db: Register[F]): HttpRoutes[F] = HttpRoutes.of[F] {
+    case POST -> Root / "activate" :? ActivateTokenParam(token) =>
+      processDbDef(db.activateUser(token))(identity)
+  }
 }
 
 object UserServices {
@@ -100,8 +114,6 @@ object UserServices {
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, UserLight] = jsonOf
   }
 
-
-
   def userLight(user: User) =
     UserLight(user.id, user.username, user.role, user.firstName, user.lastName)
 
@@ -115,5 +127,11 @@ object UserServices {
   object UpdInfo {
     implicit def encoder[F[_]]: EntityEncoder[F, UpdInfo] = jsonEncoderOf
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, UpdInfo] = jsonOf
+  }
+
+  case class CreateUser(username: String, password: String, email: String)
+  object CreateUser {
+    implicit def encoder[F[_]]: EntityEncoder[F, CreateUser] = jsonEncoderOf
+    implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, CreateUser] = jsonOf
   }
 }

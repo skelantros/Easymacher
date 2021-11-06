@@ -10,7 +10,7 @@ import ru.skelantros.easymacher.utils.Email
 
 object DbMocks {
   def userDbSelect[F[_] : Monad](init: Seq[User]) =
-    new UserDb.Select[F] with UserDb.SelectOffset[F] with UserDb.Update[F] {
+    new UserDb.Select[F] with UserDb.SelectOffset[F] with UserDb.Update[F] with UserDb.Register[F] {
       private val db = mutable.ArrayBuffer.from[User](init)
 
       override def allUsers: F[DbResult[Seq[User]]] =
@@ -93,5 +93,9 @@ object DbMocks {
 
       override def updateEmail(id: Int, email: Email): F[DbUnit] =
         updateInfo(id, None, None, None, Some(email))
+
+      override def createUser(username: String, password: String, email: Email, role: Role): F[DbUnit] = ???
+
+      override def activateUser(uuid: String): F[DbUnit] = ???
     }
 }
