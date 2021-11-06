@@ -7,6 +7,7 @@ import org.http4s.dsl.impl.QueryParamDecoderMatcher
 import org.http4s.{EntityEncoder, Response}
 import ru.skelantros.easymacher.db.DbResult
 import ru.skelantros.easymacher.entities.Role
+import ru.skelantros.easymacher.utils.Email
 
 package object services {
   type RespF[F[_]] = F[Response[F]]
@@ -46,5 +47,13 @@ package object services {
       msg => BadRequest(msg),
       t => logThrowable[F](t) >> InternalServerError()
     )
+  }
+
+  def processDbEmail[F[_] : Monad, A, B : ({type E[V] = EntityEncoder[F, V]})#E](email: String, res: Email => F[DbResult[A]])(f: A => B): RespF[F] = {
+    val dsl = new Http4sDsl[F] {}
+    import dsl._
+    Email(email).fold(
+      BadRequest("Incorrect email")
+    )(em => processDbDef(res(em))(f))
   }
 }
