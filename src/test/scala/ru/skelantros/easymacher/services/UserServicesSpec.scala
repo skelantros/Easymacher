@@ -1,14 +1,16 @@
 package ru.skelantros.easymacher.services
 
 import cats.effect.IO
+import io.circe.Json
 import io.circe.generic.auto._
+import io.circe.syntax._
+import org.http4s._
 import org.http4s.circe._
 import org.http4s.implicits._
-import org.http4s._
 import org.scalatest.flatspec.AnyFlatSpec
 import ru.skelantros.easymacher.db.DbResult
 import ru.skelantros.easymacher.entities.{Role, User}
-import ru.skelantros.easymacher.services.UserServices.{UpdInfo, UpdPassword, UserLight}
+import ru.skelantros.easymacher.services.UserServices.UserLight
 import ru.skelantros.easymacher.{CommonSpec, DbMocks}
 
 class UserServicesSpec extends AnyFlatSpec with CommonSpec {
@@ -18,6 +20,16 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     User(3, "g03th3", "g03th3@klassik.de", "5678", Role.User, true, None, None),
     User(4, "damned", "damned@mail.ru", "xd", Role.User, false, None, None)
   )
+
+
+  val skelantrosJson = Json.obj(
+    "id" := 1,
+    "username" := "skelantros",
+    "role" := "admin",
+    "firstName" := "Alex",
+    "lastName" := "Egorowski"
+  )
+
   val services = new UserServices[IO]
 
   implicit val seqLightEncoder: EntityEncoder[IO, Seq[UserLight]] = jsonEncoderOf
@@ -64,6 +76,15 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     )
   }
 
+  it should "ignore input role case" in {
+    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    val req = Request[IO](method = Method.GET, uri = uri"/users?role=AdMiN")
+    val actualResp = services.allByRole.orNotFound.run(req)
+    check(actualResp, Status.Ok,
+      Some(usersSample.filter(_.role == Role.Admin).map(UserServices.userLight))
+    )
+  }
+
   it should "catch incorrect role correctly" in {
     implicit val db = DbMocks.userDbSelect[IO](usersSample)
     val actualResp = services.allByRole.orNotFound.run(allTrashByRoleReq)
@@ -77,7 +98,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     val req = Request[IO](method = Method.GET, uri=uri"/user?id=1")
     val actualResp = services.byId.orNotFound.run(req)
     check(actualResp, Status.Ok,
-      Some(UserServices.userLight(usersSample.head))
+      Some(skelantrosJson)
     )
   }
 
@@ -95,7 +116,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     val req = Request[IO](method = Method.GET, uri=uri"/user?username=skelantros")
     val actualResp = services.byUsername.orNotFound.run(req)
     check(actualResp, Status.Ok,
-      Some(UserServices.userLight(usersSample.head))
+      Some(skelantrosJson)
     )
   }
 
@@ -110,7 +131,10 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
 
   "updatePassword" should "update password for existing users correctly" in {
     implicit val db = DbMocks.userDbSelect[IO](usersSample)
-    val body = UpdPassword("23052001", "2305")
+    val body = Json.obj(
+      "old" := "23052001",
+      "new" := "2305"
+    )
     val req = Request[IO](method = Method.POST, uri=uri"/update-password").withEntity(body)
     val actualResp = services.updatePassword(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
@@ -120,7 +144,10 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
 
   it should "not accept requests with wrong password" in {
     implicit val db = DbMocks.userDbSelect[IO](usersSample)
-    val body = UpdPassword("2305201", "2305")
+    val body = Json.obj(
+      "old" := "2305201",
+      "new" := "2305"
+    )
     val req = Request[IO](method = Method.POST, uri=uri"/update-password").withEntity(body)
     val actualResp = services.updatePassword(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.BadRequest, Option("Wrong password."))
@@ -130,7 +157,9 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
 
   "updateInfo" should "correctly change 'simple' parameters" in {
     implicit val db = DbMocks.userDbSelect[IO](usersSample)
-    val body = UpdInfo(None, None, Some("Alexander"), None)
+    val body = Json.obj(
+      "firstName" := "Alexander"
+    )
     val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
     val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
@@ -140,7 +169,9 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
 
   it should "correctly change 'complex' parameters" in {
     implicit val db = DbMocks.userDbSelect[IO](usersSample)
-    val body = UpdInfo(None, Some("Skel"), None, None)
+    val body = Json.obj {
+      "username" := "Skel"
+    }
     val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
     val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
@@ -150,7 +181,10 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
 
   it should "change parameters in transaction (if something goes wrong, nothing changes)" in {
     implicit val db = DbMocks.userDbSelect[IO](usersSample)
-    val body = UpdInfo(None, Some("adefful"), Some("Alexander"), None)
+    val body = Json.obj(
+      "username" := "adefful",
+      "firstName" := "Alexander"
+    )
     val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
     val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.BadRequest, Option("User with username 'adefful' already exists."))
