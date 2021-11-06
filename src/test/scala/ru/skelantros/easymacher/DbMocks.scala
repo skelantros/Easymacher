@@ -13,6 +13,13 @@ object DbMocks {
     new UserDb.Select[F] with UserDb.SelectOffset[F] with UserDb.Update[F] with UserDb.Register[F] {
       private val db = mutable.ArrayBuffer.from[User](init)
 
+      private def findByUsername(username: String): Option[(User, Int)] =
+        db.zipWithIndex.find(_._1.username.toLowerCase == username.toLowerCase)
+      private def findByEmail(email: Email): Option[(User, Int)] =
+        db.zipWithIndex.find(_._1.email.asString.toLowerCase == email.asString.toLowerCase)
+      private def findById(id: Int): Option[(User, Int)] =
+        db.zipWithIndex.find(_._1.id == id)
+
       private def isPasswordValid(password: String): Boolean = password.length > 0
 
       override def allUsers: F[DbResult[Seq[User]]] =
@@ -97,9 +104,9 @@ object DbMocks {
         updateInfo(id, None, None, None, Some(email))
 
       override def createUser(username: String, password: String, email: Email, role: Role): F[DbUnit] = Monad[F].pure {
-        if(db.map(_.username).contains(username))
+        if(findByUsername(username).nonEmpty)
           DbResult.mistake(s"User with username '$username' already exists.")
-        else if(db.map(_.email).contains(email))
+        else if(findByEmail(email).nonEmpty)
           DbResult.mistake(s"User with email '${email.asString}' already exists.")
         else if(!isPasswordValid(password))
           DbResult.mistake(s"Invalid password.")
