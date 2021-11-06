@@ -8,7 +8,7 @@ import org.http4s._
 import org.http4s.circe._
 import org.http4s.implicits._
 import org.scalatest.flatspec.AnyFlatSpec
-import ru.skelantros.easymacher.db.DbResult
+import ru.skelantros.easymacher.db.{DbResult, UserDb}
 import ru.skelantros.easymacher.entities.{Role, User}
 import ru.skelantros.easymacher.services.UserServices.UserLight
 import ru.skelantros.easymacher.utils.Email
@@ -230,5 +230,85 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     check(actualResp, Status.BadRequest, Option("Incorrect email"))
     // check if nothing has been changed in DB
     db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head)
+  }
+
+  def createUserReq(json: Json, db: UserDb.Register[IO]): IO[Response[IO]] = {
+    val req = Request[IO](method = Method.POST, uri=uri"/register").withEntity(json)
+    val actualResp = services.createUser(db).orNotFound.run(req)
+    actualResp
+  }
+  def createUserSampleReq(json: Json): (IO[Response[IO]], UserDb.Select[IO] with UserDb.Register[IO]) = {
+    val db = DbMocks.userDbSelect[IO](usersSample)
+    (createUserReq(json, db), db)
+  }
+
+  "createUser" should "create user with correct inputs (unique username & email, valid password & email)" in {
+    val body = Json.obj(
+      "username" := "alegor",
+      "email" := "alegor@yandex.ru",
+      "password" := "1234"
+    )
+    val (actualResp, db) = createUserSampleReq(body)
+    check(actualResp, Status.Ok, Option(()))
+    // check if user has been created
+    val expectedUser = User(5, "alegor", Email("alegor@yandex.ru").get, "1234", Role.User, false, "005")
+    db.userById(5).unsafeRunSync() shouldBe DbResult.of(expectedUser)
+  }
+
+  it should "not accept invalid emails" in {
+    val body = Json.obj(
+      "username" := "alegor",
+      "email" := "alegor@yandex..ru",
+      "password" := "1234"
+    )
+    val (actualResp, db) = createUserSampleReq(body)
+    check(actualResp, Status.BadRequest, Option("Incorrect email"))
+    // check if user has not been created
+    db.userById(5).unsafeRunSync() shouldBe DbResult.mistake("User with id 5 does not exist.")
+  }
+
+  it should "not accept existing usernames" in {
+    val body = Json.obj(
+      "username" := "Skelantros",
+      "email" := "alegor@yandex.ru",
+      "password" := "1234"
+    )
+    val (actualResp, db) = createUserSampleReq(body)
+    check(actualResp, Status.BadRequest, Option("User with username 'Skelantros' already exists."))
+    // check if user has not been created
+    db.userById(5).unsafeRunSync() shouldBe DbResult.mistake("User with id 5 does not exist.")
+  }
+
+  it should "not accept existing emails" in {
+    val body = Json.obj(
+      "username" := "alegor",
+      "email" := "skeLantros@easymaCher.ru",
+      "password" := "1234"
+    )
+    val (actualResp, db) = createUserSampleReq(body)
+    check(actualResp, Status.BadRequest, Option("User with email 'skeLantros@easymaCher.ru' already exists."))
+    // check if user has not been created
+    db.userById(5).unsafeRunSync() shouldBe DbResult.mistake("User with id 5 does not exist.")
+  }
+
+  it should "not accept existing invalid passwords (empty in mock)" in {
+    val body = Json.obj(
+      "username" := "alegor",
+      "email" := "alegor@yandex.ru",
+      "password" := ""
+    )
+    val (actualResp, db) = createUserSampleReq(body)
+    check(actualResp, Status.BadRequest, Option("Invalid password."))
+    // check if user has not been created
+    db.userById(5).unsafeRunSync() shouldBe DbResult.mistake("User with id 5 does not exist.")
+  }
+
+  "activateUser" should "activate users" in {
+    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    val req = Request[IO](method = Method.POST, uri=uri"/activate?token=004")
+    val actualResp = services.activateUser.orNotFound.run(req)
+    check(actualResp, Status.Ok, Option(()))
+    // check if user has been activated
+    db.userById(4).unsafeRunSync() shouldBe DbResult.of(usersSample(3).copy(isActivated = true))
   }
 }
