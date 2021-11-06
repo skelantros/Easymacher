@@ -130,6 +130,33 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     )
   }
 
+  "byEmail" should "catch non-valid emails" in {
+    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    val req = Request[IO](method = Method.GET, uri=uri"/user?email=nonvalid@yandex..ru")
+    val actualResp = services.byEmail.orNotFound.run(req)
+    check(actualResp, Status.BadRequest,
+      Some("Incorrect email")
+    )
+  }
+
+  it should "return existing user" in {
+    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    val req = Request[IO](method = Method.GET, uri=uri"/user?email=skelantros@easymacher.ru")
+    val actualResp = services.byEmail.orNotFound.run(req)
+    check(actualResp, Status.Ok,
+      Some(skelantrosJson)
+    )
+  }
+
+  it should "not return non-existing user" in {
+    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    val req = Request[IO](method = Method.GET, uri=uri"/user?email=skelll@easymacher.ru")
+    val actualResp = services.byEmail.orNotFound.run(req)
+    check(actualResp, Status.BadRequest,
+      Some("User with email 'skelll@easymacher.ru' does not exist.")
+    )
+  }
+
   "updatePassword" should "update password for existing users correctly" in {
     implicit val db = DbMocks.userDbSelect[IO](usersSample)
     val body = Json.obj(
@@ -189,6 +216,18 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
     val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.BadRequest, Option("User with username 'adefful' already exists."))
+    // check if nothing has been changed in DB
+    db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head)
+  }
+
+  it should "catch non-valid emails" in {
+    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    val body = Json.obj(
+      "email" := "skelll@yandex..ru"
+    )
+    val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
+    val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
+    check(actualResp, Status.BadRequest, Option("Incorrect email"))
     // check if nothing has been changed in DB
     db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head)
   }
