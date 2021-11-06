@@ -29,21 +29,21 @@ object DbMocks {
         DbResult.of(db.filter(_.role == role).toSeq).pure[F]
 
       override def userById(id: Int): F[DbResult[User]] = Monad[F].pure {
-        db.find(_.id == id) match {
+        findById(id).map(_._1) match {
           case Some(x) => DbResult.of(x)
           case None => DbResult.mistake(s"User with id $id does not exist.")
         }
       }
 
       override def userByUsername(username: String): F[DbResult[User]] = Monad[F].pure {
-        db.find(_.username.toLowerCase == username.toLowerCase) match {
+        findByUsername(username).map(_._1) match {
           case Some(x) => DbResult.of(x)
           case None => DbResult.mistake(s"User with username '$username' does not exist.")
         }
       }
 
       override def userByEmail(email: Email): F[DbResult[User]] = Monad[F].pure {
-        db.find(_.email.asString.toLowerCase == email.asString.toLowerCase) match {
+        findByEmail(email).map(_._1) match {
           case Some(x) => DbResult.of(x)
           case None => DbResult.mistake(s"User with email '${email.asString}' does not exist.")
         }
