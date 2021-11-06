@@ -72,12 +72,23 @@ class UserServices[F[_] : Concurrent] {
 }
 
 object UserServices {
-  case class UserLight(id: Int, username: String, role: Role,
-                       firstName: Option[String], lastName: Option[String])
+  case class UserLight(id: Int, username: String, role: String,
+                       firstName: Option[String], lastName: Option[String]) {
+    def this(id: Int, username: String, role: Role, firstName: Option[String], lastName: Option[String]) = {
+      this(id, username, role.asString, firstName, lastName)
+    }
+  }
   object UserLight {
+    def apply(id: Int, username: String, role: Role,
+              firstName: Option[String], lastName: Option[String]): UserLight =
+      new UserLight(id, username, role, firstName, lastName)
+
     implicit def encoder[F[_]]: EntityEncoder[F, UserLight] = jsonEncoderOf
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, UserLight] = jsonOf
   }
+
+
+
   def userLight(user: User) =
     UserLight(user.id, user.username, user.role, user.firstName, user.lastName)
 
