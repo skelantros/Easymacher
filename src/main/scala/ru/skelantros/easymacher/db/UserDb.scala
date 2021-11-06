@@ -8,6 +8,7 @@ object UserDb {
     def usersByRole(role: Role): F[DbResult[Seq[User]]]
     def userById(id: Int): F[DbResult[User]]
     def userByUsername(username: String): F[DbResult[User]]
+    def userByEmail(email: String): F[DbResult[User]]
   }
 
   trait SelectOffset[F[_]] {

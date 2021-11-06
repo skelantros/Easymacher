@@ -32,6 +32,13 @@ object DbMocks {
         }
       }
 
+      override def userByEmail(email: String): F[DbResult[User]] = Monad[F].pure {
+        db.find(_.email == email) match {
+          case Some(x) => DbResult.of(x)
+          case None => DbResult.mistake(s"User with email '$email' does not exist.")
+        }
+      }
+
       override def allUsers(from: Int, count: Int): F[DbResult[Seq[User]]] =
         DbResult.of(db.slice(from, from + count).toSeq).pure[F]
 
