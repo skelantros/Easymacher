@@ -11,14 +11,15 @@ import org.scalatest.flatspec.AnyFlatSpec
 import ru.skelantros.easymacher.db.DbResult
 import ru.skelantros.easymacher.entities.{Role, User}
 import ru.skelantros.easymacher.services.UserServices.UserLight
+import ru.skelantros.easymacher.utils.Email
 import ru.skelantros.easymacher.{CommonSpec, DbMocks}
 
 class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   val usersSample = Seq(
-    User(1, "skelantros", "skelantros@easymacher.ru", "23052001", Role.Admin, true, Some("Alex"), Some("Egorowski")),
-    User(2, "adefful", "ad3fful@easymacher.ru", "1234", Role.User, true, Some("Alex"), None),
-    User(3, "g03th3", "g03th3@klassik.de", "5678", Role.User, true, None, None),
-    User(4, "damned", "damned@mail.ru", "xd", Role.User, false, None, None)
+    User(1, "skelantros", Email("skelantros@easymacher.ru").get, "23052001", Role.Admin, true, Some("Alex"), Some("Egorowski")),
+    User(2, "adefful", Email("ad3fful@easymacher.ru").get, "1234", Role.User, true, Some("Alex"), None),
+    User(3, "g03th3", Email("g03th3@klassik.de").get, "5678", Role.User, true, None, None),
+    User(4, "damned", Email("damned@mail.ru").get, "xd", Role.User, false, None, None)
   )
 
 

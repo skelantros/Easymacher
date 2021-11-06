@@ -34,7 +34,7 @@ object DbMocks {
       }
 
       override def userByEmail(email: Email): F[DbResult[User]] = Monad[F].pure {
-        db.find(_.email.toLowerCase == email.asString.toLowerCase) match {
+        db.find(_.email.asString.toLowerCase == email.asString.toLowerCase) match {
           case Some(x) => DbResult.of(x)
           case None => DbResult.mistake(s"User with email '$email' does not exist.")
         }
@@ -59,7 +59,7 @@ object DbMocks {
         }
       }
 
-      override def updateInfo(id: Int, firstName: Option[String], lastName: Option[String], username: Option[String], email: Option[String]): F[DbUnit] =
+      override def updateInfo(id: Int, firstName: Option[String], lastName: Option[String], username: Option[String], email: Option[Email]): F[DbUnit] =
         Monad[F].pure {
           val userOpt = db.zipWithIndex.find(_._1.id == id)
           userOpt match {
@@ -91,7 +91,7 @@ object DbMocks {
       override def updateUsername(id: Int, username: String): F[DbUnit] =
         updateInfo(id, None, None, Some(username), None)
 
-      override def updateEmail(id: Int, email: String): F[DbUnit] =
+      override def updateEmail(id: Int, email: Email): F[DbUnit] =
         updateInfo(id, None, None, None, Some(email))
     }
 }

@@ -20,12 +20,12 @@ object UserDb {
   trait Update[F[_]] {
     def updatePassword(id: Int, oldPassword: String, newPassword: String): F[DbUnit]
     def updateInfo(id: Int, firstName: Option[String], lastName: Option[String],
-                   username: Option[String], email: Option[String]): F[DbUnit]
+                   username: Option[String], email: Option[Email]): F[DbUnit]
 
     def updateFirstName(id: Int, firstName: String): F[DbUnit]
     def updateLastName(id: Int, lastName: String): F[DbUnit]
     def updateUsername(id: Int, username: String): F[DbUnit]
-    def updateEmail(id: Int, email: String): F[DbUnit]
+    def updateEmail(id: Int, email: Email): F[DbUnit]
   }
 
   trait AdminUpdate[F[_]] {

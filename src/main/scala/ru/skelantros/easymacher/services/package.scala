@@ -1,10 +1,10 @@
 package ru.skelantros.easymacher
 
 import cats.Monad
-import org.http4s.{EntityEncoder, Response}
-import org.http4s.dsl.impl.QueryParamDecoderMatcher
 import cats.implicits._
 import org.http4s.dsl.Http4sDsl
+import org.http4s.dsl.impl.QueryParamDecoderMatcher
+import org.http4s.{EntityEncoder, Response}
 import ru.skelantros.easymacher.db.DbResult
 import ru.skelantros.easymacher.entities.Role
 
@@ -19,6 +19,7 @@ package object services {
   object IdParam extends QueryParamDecoderMatcher[Int]("id")
   object UsernameParam extends QueryParamDecoderMatcher[String]("username")
   object RoleParam extends QueryParamDecoderMatcher[String]("role")
+  object EmailParam extends QueryParamDecoderMatcher[String]("email")
   def parseRole(str: String): Option[Role] = str.toLowerCase match {
     case "user" => Some(Role.User)
     case "admin" => Some(Role.Admin)

@@ -9,6 +9,7 @@ import io.circe.generic.auto._
 import cats.implicits._
 import ru.skelantros.easymacher.db.UserDb.{Select, SelectOffset, Update}
 import ru.skelantros.easymacher.entities.{Role, User}
+import ru.skelantros.easymacher.utils.Email
 
 class UserServices[F[_] : Concurrent] {
   val dsl = new Http4sDsl[F] {}
@@ -53,6 +54,13 @@ class UserServices[F[_] : Concurrent] {
       processDbDef(db.userByUsername(username))(userLight)
   }
 
+  def byEmail(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
+    case GET -> Root / "email" :? EmailParam(email) =>
+      Email(email).fold(
+        BadRequest("Incorrect email")
+      )(em => processDbDef(db.userByEmail(em))(userLight))
+  }
+
   def updatePassword(user: User)(implicit db: Update[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "update-password" =>
       val body = req.as[UpdPassword]
@@ -65,8 +73,13 @@ class UserServices[F[_] : Concurrent] {
     case req @ POST -> Root / "update-info" =>
       val body = req.as[UpdInfo]
       body.flatMap { updInfo =>
-        val UpdInfo(email, username, firstName, lastName) = updInfo
-        processDbDef(db.updateInfo(user.id, firstName, lastName, username, email))(identity)
+        val UpdInfo(emailOpt, username, firstName, lastName) = updInfo
+        emailOpt match {
+          case None => processDbDef(db.updateInfo(user.id, firstName, lastName, username, None))(identity)
+          case Some(emStr) => Email(emStr).fold(
+            BadRequest("Incorrect email")
+          )(email => processDbDef(db.updateInfo(user.id, firstName, lastName, username, Some(email)))(identity))
+        }
       }
   }
 }
