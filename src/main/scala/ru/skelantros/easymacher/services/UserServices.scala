@@ -55,7 +55,7 @@ class UserServices[F[_] : Concurrent] {
   }
 
   def byEmail(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root / "email" :? EmailParam(email) =>
+    case GET -> Root / "user" :? EmailParam(email) =>
       Email(email).fold(
         BadRequest("Incorrect email")
       )(em => processDbDef(db.userByEmail(em))(userLight))
