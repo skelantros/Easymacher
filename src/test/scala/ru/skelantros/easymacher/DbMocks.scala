@@ -13,6 +13,8 @@ object DbMocks {
     new UserDb.Select[F] with UserDb.SelectOffset[F] with UserDb.Update[F] with UserDb.Register[F] {
       private val db = mutable.ArrayBuffer.from[User](init)
 
+      private def isPasswordValid(password: String): Boolean = password.length > 0
+
       override def allUsers: F[DbResult[Seq[User]]] =
         DbResult.of(db.toSeq).pure[F]
 
@@ -94,8 +96,28 @@ object DbMocks {
       override def updateEmail(id: Int, email: Email): F[DbUnit] =
         updateInfo(id, None, None, None, Some(email))
 
-      override def createUser(username: String, password: String, email: Email, role: Role): F[DbUnit] = ???
+      override def createUser(username: String, password: String, email: Email, role: Role): F[DbUnit] = Monad[F].pure {
+        if(db.map(_.username).contains(username))
+          DbResult.mistake(s"User with username '$username' already exists.")
+        else if(db.map(_.email).contains(email))
+          DbResult.mistake(s"User with email '${email.asString}' already exists.")
+        else if(!isPasswordValid(password))
+          DbResult.mistake(s"Invalid password.")
+        else {
+          val id = db.map(_.id).max + 1
+          db += User(id, username, email, password, Role.User, false, s"00$id", None, None)
+          DbResult.unit
+        }
+      }
 
-      override def activateUser(uuid: String): F[DbUnit] = ???
+      override def activateUser(uuid: String): F[DbUnit] = Monad[F].pure {
+        db.zipWithIndex.find(_._1.activateToken == uuid).fold(
+          DbResult.mistake[Unit]("Wrong token.")
+        ) {
+          case (user, idx) =>
+            db(idx) = user.copy(isActivated = true)
+            DbResult.unit
+        }
+      }
     }
 }
