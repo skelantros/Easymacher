@@ -36,7 +36,7 @@ object DbMocks {
       override def userByEmail(email: Email): F[DbResult[User]] = Monad[F].pure {
         db.find(_.email.asString.toLowerCase == email.asString.toLowerCase) match {
           case Some(x) => DbResult.of(x)
-          case None => DbResult.mistake(s"User with email '$email' does not exist.")
+          case None => DbResult.mistake(s"User with email '${email.asString}' does not exist.")
         }
       }
 
