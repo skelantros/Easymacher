@@ -10,6 +10,12 @@ object WordDb {
     def wordsByUser(user: User): F[DbResult[Seq[Word]]] = wordsByUserId(user.id)
   }
 
+  trait SelectOffset[F[_]] {
+    def allWords(from: Int, count: Int): F[DbResult[Seq[Word]]]
+    def wordsByUserId(from: Int, count: Int, userId: Int): F[DbResult[Seq[Word]]]
+    def wordsByUser(from: Int, count: Int, user: User): F[DbResult[Seq[Word]]] = wordsByUserId(from, count, user.id)
+  }
+
   trait AddAny[F[_]] {
     def addWord(word: String, translate: Option[String], userId: Int): F[DbUnit]
     def addWord(word: String, userId: Int): F[DbUnit] = addWord(word, None, userId)
