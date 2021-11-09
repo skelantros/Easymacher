@@ -12,6 +12,10 @@ case class AnyWord(id: Int, word: String, translate: Option[String], owner: User
 case class Noun(id: Int, word: String, translate: Option[String], owner: User,
                 gender: Noun.Gender, plural: Option[String]) extends Word
 object Noun {
+  def apply(id: Int, word: String, translate: Option[String], owner: User,
+            gender: Noun.Gender, plural: Option[String]): Noun =
+    new Noun(id, word.capitalize, translate, owner, gender, plural.map(_.capitalize))
+
   sealed trait Gender
   object Gender {
     case object M extends Gender
