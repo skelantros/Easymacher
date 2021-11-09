@@ -1,14 +1,15 @@
 package ru.skelantros.easymacher.entities
 
 sealed trait Word {
+  def id: Int
   def word: String
   def translate: Option[String]
   def owner: User
 }
 
-case class AnyWord(word: String, translate: Option[String], owner: User) extends Word
+case class AnyWord(id: Int, word: String, translate: Option[String], owner: User) extends Word
 
-case class Noun(word: String, translate: Option[String], owner: User,
+case class Noun(id: Int, word: String, translate: Option[String], owner: User,
                 gender: Noun.Gender, plural: Option[String]) extends Word
 object Noun {
   sealed trait Gender
