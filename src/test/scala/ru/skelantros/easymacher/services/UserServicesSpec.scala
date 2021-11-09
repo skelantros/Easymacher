@@ -8,11 +8,11 @@ import org.http4s._
 import org.http4s.circe._
 import org.http4s.implicits._
 import org.scalatest.flatspec.AnyFlatSpec
-import ru.skelantros.easymacher.db.{DbResult, UserDb}
+import ru.skelantros.easymacher.db.{DbResult, UserDb, UserMock}
 import ru.skelantros.easymacher.entities.{Role, User}
 import ru.skelantros.easymacher.services.UserServices.UserLight
 import ru.skelantros.easymacher.utils.Email
-import ru.skelantros.easymacher.{CommonSpec, DbMocks}
+import ru.skelantros.easymacher.CommonSpec
 
 class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   val usersSample = Seq(
@@ -31,6 +31,10 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     "lastName" := "Egorowski"
   )
 
+  type UserMockDb = UserDb.Select[IO] with UserDb.SelectOffset[IO] with UserDb.Update[IO] with UserDb.Register[IO]
+  def sampleMock: UserMockDb = sampleMock(usersSample)
+  def sampleMock(seq: Seq[User]): UserMockDb = new UserMock[IO](seq)
+
   val services = new UserServices[IO]
 
   implicit val seqLightEncoder: EntityEncoder[IO, Seq[UserLight]] = jsonEncoderOf
@@ -44,25 +48,25 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   val allTrashByRoleReq = Request[IO](method = Method.GET, uri = uri"/users?role=trash")
 
   "An empty User Database" should "not return any users" in {
-    implicit val db = DbMocks.userDbSelect[IO](Seq())
+    implicit val db = sampleMock(Seq())
     val actualResp = services.all.orNotFound.run(allUsersReq)
     check(actualResp, Status.Ok, Some(Seq.empty[UserLight]))
   }
 
   it should "not return any users by role" in {
-    implicit val db = DbMocks.userDbSelect[IO](Seq())
+    implicit val db = sampleMock(Seq())
     val actualResp = services.all.orNotFound.run(allUsersByRoleReq)
     check(actualResp, Status.Ok, Some(Seq.empty[UserLight]))
   }
 
   "all" should "return all users correctly" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val actualResp = services.all.orNotFound.run(allUsersReq)
     check(actualResp, Status.Ok, Some(usersSample.map(UserServices.userLight)))
   }
 
   "allByRole" should "return all users by role correctly" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val actualResp = services.allByRole.orNotFound.run(allUsersByRoleReq)
     check(actualResp, Status.Ok,
       Some(usersSample.filter(_.role == Role.User).map(UserServices.userLight))
@@ -70,7 +74,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   it should "return all admins by role correctly" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val actualResp = services.allByRole.orNotFound.run(allAdminsByRoleReq)
     check(actualResp, Status.Ok,
       Some(usersSample.filter(_.role == Role.Admin).map(UserServices.userLight))
@@ -78,7 +82,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   it should "ignore input role case" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val req = Request[IO](method = Method.GET, uri = uri"/users?role=AdMiN")
     val actualResp = services.allByRole.orNotFound.run(req)
     check(actualResp, Status.Ok,
@@ -87,7 +91,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   it should "catch incorrect role correctly" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val actualResp = services.allByRole.orNotFound.run(allTrashByRoleReq)
     check(actualResp, Status.BadRequest,
       Some(s"Role 'trash' does not exist.")
@@ -95,7 +99,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   "byId" should "return existing user" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val req = Request[IO](method = Method.GET, uri=uri"/user?id=1")
     val actualResp = services.byId.orNotFound.run(req)
     check(actualResp, Status.Ok,
@@ -104,7 +108,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   it should "not return non-existing user" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val req = Request[IO](method = Method.GET, uri=uri"/user?id=5")
     val actualResp = services.byId.orNotFound.run(req)
     check(actualResp, Status.BadRequest,
@@ -113,7 +117,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   "byUsername" should "return existing user" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val req = Request[IO](method = Method.GET, uri=uri"/user?username=skelantros")
     val actualResp = services.byUsername.orNotFound.run(req)
     check(actualResp, Status.Ok,
@@ -122,7 +126,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   it should "not return non-existing user" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val req = Request[IO](method = Method.GET, uri=uri"/user?username=whoisthat")
     val actualResp = services.byUsername.orNotFound.run(req)
     check(actualResp, Status.BadRequest,
@@ -131,7 +135,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   "byEmail" should "catch non-valid emails" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val req = Request[IO](method = Method.GET, uri=uri"/user?email=nonvalid@yandex..ru")
     val actualResp = services.byEmail.orNotFound.run(req)
     check(actualResp, Status.BadRequest,
@@ -140,7 +144,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   it should "return existing user" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val req = Request[IO](method = Method.GET, uri=uri"/user?email=skelantros@easymacher.ru")
     val actualResp = services.byEmail.orNotFound.run(req)
     check(actualResp, Status.Ok,
@@ -149,7 +153,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   it should "not return non-existing user" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val req = Request[IO](method = Method.GET, uri=uri"/user?email=skelll@easymacher.ru")
     val actualResp = services.byEmail.orNotFound.run(req)
     check(actualResp, Status.BadRequest,
@@ -158,7 +162,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   "updatePassword" should "update password for existing users correctly" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val body = Json.obj(
       "old" := "23052001",
       "new" := "2305"
@@ -171,7 +175,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   it should "not accept requests with wrong password" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val body = Json.obj(
       "old" := "2305201",
       "new" := "2305"
@@ -184,7 +188,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   "updateInfo" should "correctly change 'simple' parameters" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val body = Json.obj(
       "firstName" := "Alexander"
     )
@@ -196,7 +200,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   it should "correctly change 'complex' parameters" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val body = Json.obj {
       "username" := "Skel"
     }
@@ -208,7 +212,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   it should "change parameters in transaction (if something goes wrong, nothing changes)" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val body = Json.obj(
       "username" := "adefful",
       "firstName" := "Alexander"
@@ -221,7 +225,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   it should "catch non-valid emails" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val body = Json.obj(
       "email" := "skelll@yandex..ru"
     )
@@ -238,7 +242,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     actualResp
   }
   def createUserSampleReq(json: Json): (IO[Response[IO]], UserDb.Select[IO] with UserDb.Register[IO]) = {
-    val db = DbMocks.userDbSelect[IO](usersSample)
+    val db = sampleMock
     (createUserReq(json, db), db)
   }
 
@@ -304,7 +308,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   "activateUser" should "activate users" in {
-    implicit val db = DbMocks.userDbSelect[IO](usersSample)
+    implicit val db = sampleMock
     val req = Request[IO](method = Method.POST, uri=uri"/activate?token=004")
     val actualResp = services.activateUser.orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
