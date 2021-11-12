@@ -10,6 +10,7 @@ import cats.implicits._
 import ru.skelantros.easymacher.db.DbResult
 import ru.skelantros.easymacher.db.WordDb._
 import ru.skelantros.easymacher.entities.{AnyWord, Noun, User, Word}
+import ru.skelantros.easymacher.utils.StatusMessages._
 
 //noinspection TypeAnnotation
 class WordServices[F[_] : Concurrent] {
@@ -33,7 +34,7 @@ class WordServices[F[_] : Concurrent] {
     case GET -> Root / "words" :? IdParam(id) =>
       processDbDef(
         db.wordById(id).map(_.flatMap { w =>
-          if(w.owner == user) DbResult.of(w) else DbResult.mistake("You don't have access to this word.")
+          if(w.owner == user) DbResult.of(w) else DbResult.mistake(noPermission)
         })
       )(JsonOut.fromWord)
   }
@@ -41,10 +42,12 @@ class WordServices[F[_] : Concurrent] {
     case req @ POST -> Root / "add-word" =>
       val inp = req.as[JsonIn]
       inp.flatMap { jsonInp =>
-        val JsonIn(word, _, translate, _, plural) = jsonInp
-        val dbReq = jsonInp.genderOpt match {
+        val JsonIn(_, typ, translate, _, plural) = jsonInp
+        val word = jsonInp.actualWord
+        lazy val dbReq = jsonInp.genderOpt match {
           case Some(g) => db.addNoun(word, translate, g, plural, user)
-          case None => db.addWord(word, translate, user)
+          case None if !typ.map(_.toLowerCase).contains("noun") => db.addWord(word, translate, user)
+          case _ => DbResult.mistake[Unit](noGenderNoun).pure[F]
         }
         processDbDef(dbReq)(identity)
       }
@@ -70,22 +73,35 @@ object WordServices {
   case class JsonIn(word: String, `type`: Option[String], translate: Option[String],
                     gender: Option[String], plural: Option[String] // Noun specific fields
                    ) {
+    import JsonIn._
+    def isNoun: Boolean =
+      `type`.map(_.toLowerCase).contains("noun") || nounRegex.matches(word) || genderOpt.nonEmpty
+
     lazy val genderOpt: Option[Noun.Gender] = {
       import Noun.Gender._
       val wordArt = word.trim.take(3)
       if(wordArt == "der") Some(M)
       else if(wordArt == "die") Some(F)
       else if(wordArt == "das") Some(N)
-      else if(`type`.map(_.toLowerCase).contains("noun")) gender.head.map(_.toLower) match {
-        case "m" => Some(M)
-        case "n" => Some(N)
-        case "f" => Some(F)
-      } else None
+      else gender.map(_.head.toLower) match {
+        case Some('m') => Some(M)
+        case Some('n') => Some(N)
+        case Some('f') => Some(F)
+        case _ => None
+      }
+    }
+
+    lazy val actualWord: String = word.toLowerCase match {
+      case JsonIn.nounRegex(_, w) => w.trim.capitalize
+      case w if isNoun => w.trim.capitalize
+      case w => w
     }
   }
 
   object JsonIn {
     implicit def encoder[F[_]]: EntityEncoder[F, JsonIn] = dropJsonEnc
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, JsonIn] = jsonOf
+
+    val nounRegex = "(der|die|das)\\s+(.+)".r
   }
 }
