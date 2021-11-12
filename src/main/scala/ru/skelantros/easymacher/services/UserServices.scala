@@ -16,9 +16,9 @@ class UserServices[F[_] : Concurrent] {
   import dsl._
   import UserServices._
 
-  private implicit val lightEncoder: EntityEncoder[F, UserLight] = jsonEncoderOf
-  private implicit val seqLightEncoder: EntityEncoder[F, Seq[UserLight]] = jsonEncoderOf
-  private implicit val optLightEncoder: EntityEncoder[F, Option[UserLight]] = jsonEncoderOf
+  private implicit val lightEncoder: EntityEncoder[F, UserLight] = dropJsonEnc
+  private implicit val seqLightEncoder: EntityEncoder[F, Seq[UserLight]] = dropJsonEnc
+  private implicit val optLightEncoder: EntityEncoder[F, Option[UserLight]] = dropJsonEnc
 
   def all(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case GET -> Root / "users" =>
@@ -110,7 +110,7 @@ object UserServices {
               firstName: Option[String], lastName: Option[String]): UserLight =
       new UserLight(id, username, role, firstName, lastName)
 
-    implicit def encoder[F[_]]: EntityEncoder[F, UserLight] = jsonEncoderOf
+    implicit def encoder[F[_]]: EntityEncoder[F, UserLight] = dropJsonEnc
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, UserLight] = jsonOf
   }
 
@@ -119,19 +119,19 @@ object UserServices {
 
   case class UpdPassword(old: String, `new`: String)
   object UpdPassword {
-    implicit def encoder[F[_]]: EntityEncoder[F, UpdPassword] = jsonEncoderOf
+    implicit def encoder[F[_]]: EntityEncoder[F, UpdPassword] = dropJsonEnc
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, UpdPassword] = jsonOf
   }
 
   case class UpdInfo(email: Option[String], username: Option[String], firstName: Option[String], lastName: Option[String])
   object UpdInfo {
-    implicit def encoder[F[_]]: EntityEncoder[F, UpdInfo] = jsonEncoderOf
+    implicit def encoder[F[_]]: EntityEncoder[F, UpdInfo] = dropJsonEnc
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, UpdInfo] = jsonOf
   }
 
   case class CreateUser(username: String, password: String, email: String)
   object CreateUser {
-    implicit def encoder[F[_]]: EntityEncoder[F, CreateUser] = jsonEncoderOf
+    implicit def encoder[F[_]]: EntityEncoder[F, CreateUser] = dropJsonEnc
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, CreateUser] = jsonOf
   }
 }

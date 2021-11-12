@@ -8,6 +8,9 @@ import org.http4s.{EntityEncoder, Response}
 import ru.skelantros.easymacher.db.DbResult
 import ru.skelantros.easymacher.entities.Role
 import ru.skelantros.easymacher.utils.Email
+import io.circe.{Encoder, Json}
+import io.circe.syntax._
+import org.http4s.circe._
 
 package object services {
   type RespF[F[_]] = F[Response[F]]
@@ -56,5 +59,12 @@ package object services {
     Email(email).fold(
       BadRequest("Incorrect email")
     )(em => processDbDef(res(em))(f))
+  }
+
+  def dropJsonEnc[F[_], A : Encoder]: EntityEncoder[F, A] = {
+    val nullEncoder = new Encoder[A] {
+      override def apply(a: A): Json = a.asJson.deepDropNullValues
+    }
+    jsonEncoderOf[F, A](nullEncoder)
   }
 }

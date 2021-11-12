@@ -56,8 +56,8 @@ object WordServices {
                      gender: Option[String] = None, plural: Option[String] = None // Noun specific fields
                     )
   object JsonOut {
-    implicit def encoder[F[_]]: EntityEncoder[F, JsonOut] = jsonEncoderOf
-    implicit def seqEncoder[F[_]]: EntityEncoder[F, Seq[JsonOut]] = jsonEncoderOf
+    implicit def encoder[F[_]]: EntityEncoder[F, JsonOut] = dropJsonEnc
+    implicit def seqEncoder[F[_]]: EntityEncoder[F, Seq[JsonOut]] = dropJsonEnc
 
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, JsonOut] = jsonOf
 
@@ -85,7 +85,7 @@ object WordServices {
   }
 
   object JsonIn {
-    implicit def encoder[F[_]]: EntityEncoder[F, JsonIn] = jsonEncoderOf
+    implicit def encoder[F[_]]: EntityEncoder[F, JsonIn] = dropJsonEnc
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, JsonIn] = jsonOf
   }
 }
