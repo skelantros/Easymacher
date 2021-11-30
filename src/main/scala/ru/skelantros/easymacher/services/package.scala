@@ -49,7 +49,8 @@ package object services {
     processDb(res)(
       a => Ok(f(a)),
       msg => BadRequest(msg),
-      t => logThrowable[F](t) >> InternalServerError()
+      // TODO написать полноценную логику логирования, убрать выброс исключения в респонс
+      t => logThrowable[F](t) >> InternalServerError(s"$t:\n${t.getMessage}")
     )
   }
 
