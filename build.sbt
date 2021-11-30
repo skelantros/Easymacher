@@ -20,7 +20,7 @@ lazy val doobieVersion = "1.0.0-RC1"
 lazy val doobieDependencies = Seq(
   "org.tpolecat" %% "doobie-core"     % doobieVersion,
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-  "org.tpolecat" %% "doobie-specs2"   % doobieVersion
+  "org.tpolecat" %% "doobie-scalatest"   % doobieVersion
 )
 
 lazy val scalatestVersion = "3.2.10"
@@ -29,6 +29,11 @@ lazy val scalatestDependencies = Seq(
   "org.scalatest" %% "scalatest" % scalatestVersion % "test"
 )
 
+lazy val simpleAuthDependencies = Seq(
+  "org.reactormonk" %% "cryptobits" % "1.3"
+)
+
 libraryDependencies ++= http4sDependencies
 libraryDependencies ++= doobieDependencies
 libraryDependencies ++= scalatestDependencies
+libraryDependencies ++= simpleAuthDependencies

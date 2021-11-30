@@ -20,6 +20,15 @@ class UserServices[F[_] : Concurrent] {
   private implicit val seqLightEncoder: EntityEncoder[F, Seq[UserLight]] = dropJsonEnc
   private implicit val optLightEncoder: EntityEncoder[F, Option[UserLight]] = dropJsonEnc
 
+  def selectServices(implicit db: Select[F]): HttpRoutes[F] =
+    all <+> allByRole <+> byId <+> byUsername <+> byEmail
+  def updateServices(user: User)(implicit db: Update[F]): HttpRoutes[F] =
+    updatePassword(user) <+> updateInfo(user)
+  def registerServices(implicit db: Register[F]): HttpRoutes[F] =
+    createUser <+> activateUser
+  def selectOffsetServices(implicit db: SelectOffset[F]): HttpRoutes[F] =
+    allOffset <+> allByRoleOffset
+
   def all(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case GET -> Root / "users" =>
       processDbDef(db.allUsers)(_ map userLight)
@@ -86,9 +95,9 @@ class UserServices[F[_] : Concurrent] {
   def createUser(implicit db: Register[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "register" =>
       val body = req.as[CreateUser]
-      body.flatMap { createUser =>
-        val CreateUser(username, password, email) = createUser
-        processDbEmail(email, db.createUser(username, password, _, Role.User))(identity)
+      body.flatMap {
+        case CreateUser(username, password, email) =>
+          processDbEmail(email, db.createUser(username, password, _, Role.User))(identity)
       }
   }
 

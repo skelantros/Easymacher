@@ -16,4 +16,6 @@ object Email {
     case emailReg(name, _, _, host, _*) => Some(new Email(name, host))
     case _ => None
   }
+
+  def unsafe(str: String): Email = Email(str).get
 }

@@ -32,7 +32,7 @@ class WordMock[F[_] : Monad](init: Seq[Word], val userDb: UserDb.Select[F])
         case Right(user) =>
           db += AnyWord(nextId, word, translate, user)
           DbResult.unit
-        case Left(error) => Left[Error, Unit](error)
+        case Left(error) => Left[DbError, Unit](error)
       }
     } yield res
 
@@ -41,7 +41,7 @@ class WordMock[F[_] : Monad](init: Seq[Word], val userDb: UserDb.Select[F])
       u <- userDb.userById(userId)
       res: DbUnit = u match {
         case Right(user) => db += Noun(nextId, word, translate, user, gender, plural); DbResult.unit
-        case Left(error) => Left[Error, Unit](error)
+        case Left(error) => Left[DbError, Unit](error)
       }
     } yield res
 }
