@@ -18,7 +18,7 @@ class UserQueriesSpec extends AnyFunSuite with matchers.must.Matchers with IOChe
   test("selectByEmail") { check(selectByEmail("email")) }
   test("selectByToken") { check(selectByToken("token")) }
   test("update 0") { check(update(1, Some("email"), Some("username"), Some("firstName"), Some("lastName"))) }
-  test("update 1") { check(update(1, None, None, None, None)) }
+  // test("update 1") { check(update(1, None, None, None, None)) }
   test("update 2") { check(update(1, Some("email"), None, None, None)) }
   test("update 3") { check(update(1, None, Some("username"), None, None)) }
   test("update 4") { check(update(1, None, None, Some("firstName"), None)) }

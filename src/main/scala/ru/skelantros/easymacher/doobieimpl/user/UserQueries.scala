@@ -39,6 +39,7 @@ object UserQueries {
   def selectByToken(token: String) =
     sql"$selectAllFr where activate_token = $token".query[Note]
 
+  // Выбрасывает исключение, если пользователь ничего не обновляет (все поля - None)
   def update(id: Int,
              email: Option[String], username: Option[String],
              firstName: Option[String], lastName: Option[String]): Update0 = {

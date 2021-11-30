@@ -34,7 +34,8 @@ class UserDoobie[F[_] : Async](implicit val xa: Transactor[F]) extends Select[F]
     
 
   override def updateInfo(id: Int, firstName: Option[String], lastName: Option[String], username: Option[String], email: Option[Email]): F[DbUnit] =
-    processSelect(update(id, email.map(_.asString), username, firstName, lastName).note)(_ => ())
+    if(firstName.isEmpty && lastName.isEmpty && username.isEmpty && email.isEmpty) DbResult.unit.pure[F]
+    else processSelect(update(id, email.map(_.asString), username, firstName, lastName).note)(_ => ())
 
   private def generateToken: F[String] = Sync[F].blocking(UUID.randomUUID().toString.filter(_ != '-'))
 
