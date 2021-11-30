@@ -29,6 +29,11 @@ lazy val scalatestDependencies = Seq(
   "org.scalatest" %% "scalatest" % scalatestVersion % "test"
 )
 
+lazy val simpleAuthDependencies = Seq(
+  "org.reactormonk" %% "cryptobits" % "1.3"
+)
+
 libraryDependencies ++= http4sDependencies
 libraryDependencies ++= doobieDependencies
 libraryDependencies ++= scalatestDependencies
+libraryDependencies ++= simpleAuthDependencies
