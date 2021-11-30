@@ -15,7 +15,7 @@ import ru.skelantros.easymacher.utils.TransactorImpl
 
 import scala.concurrent.ExecutionContext.global
 
-object LocalDbMain extends IOApp {
+object CryptokeyMain extends IOApp {
   implicit val transactor = TransactorImpl[IO]
   implicit val userDb = new UserDoobie[IO]
   val userServices = new UserServices[IO]
