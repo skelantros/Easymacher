@@ -1,7 +1,7 @@
 package ru.skelantros.easymacher
 
 package object db {
-  type DbResult[A] = Either[Error, A]
+  type DbResult[+A] = Either[Error, A]
   type DbUnit = DbResult[Unit]
 
   object DbResult {
@@ -9,6 +9,11 @@ package object db {
     val unit: DbUnit = Right(())
     def mistake[A](msg: String): DbResult[A] = Left(Error.mistake(msg))
     def thr[A](t: Throwable): DbResult[A] = Left(Error.thr(t))
+  }
+
+  object DbUnit {
+    def mistake(msg: String): DbUnit = Left(Error.mistake(msg))
+    def thr(t: Throwable): DbUnit = Left(Error.thr(t))
   }
 
   sealed trait Error {
