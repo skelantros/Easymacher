@@ -86,9 +86,9 @@ class UserServices[F[_] : Concurrent] {
   def createUser(implicit db: Register[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "register" =>
       val body = req.as[CreateUser]
-      body.flatMap { createUser =>
-        val CreateUser(username, password, email) = createUser
-        processDbEmail(email, db.createUser(username, password, _, Role.User))(identity)
+      body.flatMap {
+        case CreateUser(username, password, email) =>
+          processDbEmail(email, db.createUser(username, password, _, Role.User))(identity)
       }
   }
 
