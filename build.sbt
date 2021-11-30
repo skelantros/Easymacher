@@ -20,7 +20,7 @@ lazy val doobieVersion = "1.0.0-RC1"
 lazy val doobieDependencies = Seq(
   "org.tpolecat" %% "doobie-core"     % doobieVersion,
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-  "org.tpolecat" %% "doobie-specs2"   % doobieVersion
+  "org.tpolecat" %% "doobie-scalatest"   % doobieVersion
 )
 
 lazy val scalatestVersion = "3.2.10"
