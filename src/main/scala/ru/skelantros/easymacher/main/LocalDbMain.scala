@@ -23,19 +23,11 @@ object LocalDbMain extends IOApp {
   val auth = new CryptokeyAuth[IO]
 
   val unauthServices: HttpRoutes[IO] =
-    userServices.activateUser <+> userServices.createUser <+> auth.loginService
+    userServices.registerServices <+> auth.loginService
 
-  val authNonIdServices: UserRoutes[IO] = AuthLifter(
-    userServices.byUsername <+>
-    userServices.byId <+>
-    userServices.byEmail <+>
-    userServices.allByRole <+>
-    userServices.all
-  )
+  val authNonIdServices: UserRoutes[IO] = AuthLifter(userServices.selectServices)
 
-  val authIdServices: UserRoutes[IO] =
-    AuthLifter(userServices.updateInfo(_)) <+>
-    AuthLifter(userServices.updatePassword(_))
+  val authIdServices: UserRoutes[IO] = AuthLifter(userServices.updateServices(_))
 
 
   val app: HttpApp[IO] =
