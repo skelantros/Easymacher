@@ -12,4 +12,6 @@ object StatusMessages {
   def userByUsernameExists(username: String): String = s"User with username '$username' already exists."
   def userByEmailExists(email: Email): String = s"User with email '${email.asString}' already exists."
   def userAlreadyActivated(token: String): String = s"User with token '$token' has been already activated."
+
+  val invalidPassword: String = "Invalid password."
 }
