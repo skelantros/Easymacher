@@ -4,13 +4,14 @@ import cats.effect.{ExitCode, IO, IOApp}
 import doobie.util.transactor.Transactor
 import org.http4s.HttpApp
 import ru.skelantros.easymacher.doobieimpl.user.UserDoobie
-import ru.skelantros.easymacher.services.UserServices
+import ru.skelantros.easymacher.services.{UserServices, WordServices}
 import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.http4s._
 import cats.implicits._
 import org.http4s.blaze.server.BlazeServerBuilder
 import ru.skelantros.easymacher.auth.{AuthLifter, CryptokeyAuth, UserRoutes}
+import ru.skelantros.easymacher.doobieimpl.word.WordDoobie
 import ru.skelantros.easymacher.utils.TransactorImpl
 
 import scala.concurrent.ExecutionContext.global
@@ -18,16 +19,26 @@ import scala.concurrent.ExecutionContext.global
 object CryptokeyMain extends IOApp {
   implicit val transactor = TransactorImpl[IO]
   implicit val userDb = new UserDoobie[IO]
+  implicit val wordsDb = new WordDoobie[IO]
+
   val userServices = new UserServices[IO]
+  val wordServices = new WordServices[IO]
 
   val auth = new CryptokeyAuth[IO]
 
   val unauthServices: HttpRoutes[IO] =
     userServices.registerServices <+> auth.loginService
 
-  val authNonIdServices: UserRoutes[IO] = AuthLifter(userServices.selectServices)
+  val authNonIdServices: UserRoutes[IO] = AuthLifter(
+    userServices.selectServices <+>
+    wordServices.selectServices
+  )
 
-  val authIdServices: UserRoutes[IO] = AuthLifter(userServices.updateServices(_))
+  val authIdServices: UserRoutes[IO] = AuthLifter(
+    userServices.updateServices(_),
+    wordServices.selectUserServices,
+    wordServices.addWord(_)
+  )
 
 
   val app: HttpApp[IO] =
