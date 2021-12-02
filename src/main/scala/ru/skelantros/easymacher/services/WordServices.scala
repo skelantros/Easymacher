@@ -18,6 +18,11 @@ class WordServices[F[_] : Concurrent] {
   import dsl._
   import WordServices._
 
+  def selectServices(implicit db: Select[F]) =
+    all <+> byId
+  def selectUserServices(implicit db: Select[F]): User => HttpRoutes[F] =
+    (u: User) => ofUser(u) <+> ofUserById(u)
+
   def all(implicit db: Select[F]) = HttpRoutes.of[F] {
     case GET -> Root / "all-words" =>
       processDbDef(db.allWords)(_ map JsonOut.fromWord)
