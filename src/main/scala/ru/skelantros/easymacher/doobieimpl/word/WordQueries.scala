@@ -1,6 +1,8 @@
 package ru.skelantros.easymacher.doobieimpl.word
 
+import doobie.free.connection.ConnectionIO
 import doobie.implicits._
+import doobie.util.update.Update0
 
 object WordQueries {
   case class BaseNote(id: Int, userId: Int, word: String, translate: Option[String], info: Option[String])
@@ -33,4 +35,9 @@ object WordQueries {
     sql"insert into words_base(user_id, word, w_translate, w_info) values ($userId, $word, $translate, $info)".update
   def insertNoun(wordId: Int, plural: Option[String], gender: Gender) =
     sql"insert into words_nouns(word_id, plural, n_gender) values ($wordId, $plural, ${gender.value})".update
+
+  implicit class UpdNote(update: Update0) {
+    def baseNote: ConnectionIO[BaseNote] =
+      update.withUniqueGeneratedKeys[BaseNote]("word_id", "user_id", "word", "w_translate", "w_info")
+  }
 }
