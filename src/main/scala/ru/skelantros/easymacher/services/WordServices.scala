@@ -84,15 +84,17 @@ object WordServices {
 
     lazy val genderOpt: Option[Noun.Gender] = {
       import Noun.Gender._
-      val wordArt = word.trim.take(3)
-      if(wordArt == "der") Some(M)
-      else if(wordArt == "die") Some(F)
-      else if(wordArt == "das") Some(N)
-      else gender.map(_.head.toLower) match {
-        case Some('m') => Some(M)
-        case Some('n') => Some(N)
-        case Some('f') => Some(F)
-        case _ => None
+      import JsonIn.nounRegex
+      word match {
+        case nounRegex("der", _) => Some(M)
+        case nounRegex("die", _) => Some(F)
+        case nounRegex("das", _) => Some(N)
+        case _ => gender.map(_.head.toLower) match {
+          case Some('m') => Some(M)
+          case Some('n') => Some(N)
+          case Some('f') => Some(F)
+          case _ => None
+        }
       }
     }
 
