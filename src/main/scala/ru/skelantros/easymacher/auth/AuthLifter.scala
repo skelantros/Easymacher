@@ -21,7 +21,4 @@ object AuthLifter {
   def apply[F[_]](service: HttpRoutes[F]): UserRoutes[F] = Kleisli { authedReq =>
     service(authedReq.req)
   }
-
-  def apply[F[_] : Monad](services: HttpRoutes[F]*): UserRoutes[F] =
-    services.map(AuthLifter(_)).reduce(_ <+> _)
 }
