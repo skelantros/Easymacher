@@ -95,7 +95,7 @@
 - word - varchar(256), not null
 - translate - varchar(256)
 - info - varchar(256)
-- w_type - word_type
+- has_type - boolean, not null
 
 ### Noun
 **gender**: enum('m', 'f', 'n')
@@ -104,19 +104,11 @@
 - plural - varchar(256)
 - w_gender - gender, not null
 
-### Verb
-- id - serial, primary key
-- word_id - integer, foreign key to Word
-- fs - varchar(256)
-- ss - varchar(256)
-- ts - varchar(256)
-- fp - varchar(256)
-- sp - varchar(256)
-- tp - varchar(256)
-
 ### WordGroup
 - id - serial, primary key
 - user_id - integer, foreign key to User
+- g_name - varchar(256), not null
+- is_shared - boolean, not null
 
 ### GroupsToWords
 - group_id - integer, foreign key to WordGroup
