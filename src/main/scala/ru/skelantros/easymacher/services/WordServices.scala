@@ -18,6 +18,11 @@ class WordServices[F[_] : Concurrent] {
   import dsl._
   import WordServices._
 
+  def selectServices(implicit db: Select[F]) =
+    all <+> byId
+  def selectUserServices(implicit db: Select[F]): User => HttpRoutes[F] =
+    (u: User) => ofUser(u) <+> ofUserById(u)
+
   def all(implicit db: Select[F]) = HttpRoutes.of[F] {
     case GET -> Root / "all-words" =>
       processDbDef(db.allWords)(_ map JsonOut.fromWord)
@@ -79,15 +84,17 @@ object WordServices {
 
     lazy val genderOpt: Option[Noun.Gender] = {
       import Noun.Gender._
-      val wordArt = word.trim.take(3)
-      if(wordArt == "der") Some(M)
-      else if(wordArt == "die") Some(F)
-      else if(wordArt == "das") Some(N)
-      else gender.map(_.head.toLower) match {
-        case Some('m') => Some(M)
-        case Some('n') => Some(N)
-        case Some('f') => Some(F)
-        case _ => None
+      import JsonIn.nounRegex
+      word match {
+        case nounRegex("der", _) => Some(M)
+        case nounRegex("die", _) => Some(F)
+        case nounRegex("das", _) => Some(N)
+        case _ => gender.map(_.head.toLower) match {
+          case Some('m') => Some(M)
+          case Some('n') => Some(N)
+          case Some('f') => Some(F)
+          case _ => None
+        }
       }
     }
 

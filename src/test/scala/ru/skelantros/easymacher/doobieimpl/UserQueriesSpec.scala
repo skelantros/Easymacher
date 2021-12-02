@@ -8,9 +8,7 @@ import ru.skelantros.easymacher.utils.TransactorImpl
 import user.UserQueries._
 
 
-class UserQueriesSpec extends AnyFunSuite with matchers.must.Matchers with IOChecker {
-  override def transactor: doobie.Transactor[IO] = TransactorImpl[IO]
-
+class UserQueriesSpec extends AnalyzeSpec {
   test("selectAll") { check(selectAll) }
   test("selectByAdmin") { check(selectByAdmin(true)) }
   test("selectById") { check(selectById(1)) }
