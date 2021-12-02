@@ -64,7 +64,7 @@ class WordDoobie[F[_] : Async](implicit xa: Transactor[F], userDb: UserDb.Select
   }
 
   override def addWord(word: String, translate: Option[String], userId: Int): F[DbUnit] = {
-    val query = insertBase(userId, word, translate, None)
+    val query = insertBase(userId, word, translate, None, false)
 
     query.run.attempt.transact(xa).map {
       case Right(_) => DbResult.unit
@@ -74,7 +74,7 @@ class WordDoobie[F[_] : Async](implicit xa: Transactor[F], userDb: UserDb.Select
 
   override def addNoun(word: String, translate: Option[String], gender: Noun.Gender, plural: Option[String], userId: Int): F[DbUnit] = {
     val query = for {
-      base <- insertBase(userId, word, translate, None).baseNote
+      base <- insertBase(userId, word, translate, None, true).baseNote
       wordId = base.id
       noun <- insertNoun(wordId, plural, DbGender(gender)).run
     } yield ()

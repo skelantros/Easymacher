@@ -31,10 +31,13 @@ object WordQueries {
   def selectByIdNouns(id: Int) = sql"$allNounFr where words_base.word_id = $id".query[NounNote]
   def selectAllByUserIdNouns(userId: Int) = sql"$allNounFr where user_id = $userId".query[NounNote]
 
-  def insertBase(userId: Int, word: String, translate: Option[String], info: Option[String]) =
-    sql"insert into words_base(user_id, word, w_translate, w_info) values ($userId, $word, $translate, $info)".update
+  def insertBase(userId: Int, word: String, translate: Option[String], info: Option[String], hasType: Boolean) =
+    sql"""insert into words_base(user_id, word, w_translate, w_info, has_type)
+          values ($userId, $word, $translate, $info, $hasType)""".update
+
   def insertNoun(wordId: Int, plural: Option[String], gender: Gender) =
-    sql"insert into words_nouns(word_id, plural, n_gender) values ($wordId, $plural, ${gender.value})".update
+    sql"""insert into words_nouns(word_id, plural, n_gender)
+          values ($wordId, $plural, ${gender.value}::gender)""".update
 
   implicit class UpdNote(update: Update0) {
     def baseNote: ConnectionIO[BaseNote] =
