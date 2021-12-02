@@ -14,6 +14,11 @@ import doobie.implicits._
 class WordDoobie[F[_] : Async](implicit xa: Transactor[F], userDb: UserDb.Select[F])
   extends Select[F] with AddAny[F] with AddNoun[F] {
 
+  // временное решение, связанное с тем, что на самом деле сначала прогружаются просто слова, а потом - существительные
+  // TODO реализовать запросы так, чтобы не приходилось проводить эту сортировку!
+  private def sortById(words: DbResult[Seq[Word]]): DbResult[Seq[Word]] =
+    words.map(_.sortBy(_.id))
+
   private def baseNoteToWord(note: BaseNote): F[DbResult[Word]] =
     userDb.userById(note.userId).map{ userRes =>
       userRes.map(u => AnyWord(note.id, note.word, note.translate, u))
@@ -31,7 +36,7 @@ class WordDoobie[F[_] : Async](implicit xa: Transactor[F], userDb: UserDb.Select
     } yield (anyWords.map(baseNoteToWord) ++ nounWords.map(nounNoteToWord)).sequence
 
     query.attempt.transact(xa).flatMap {
-      case Right(x) => x.map(_.sequence)
+      case Right(x) => x.map(_.sequence).map(sortById)
       case Left(t) => DbResult.thr[Seq[Word]](t).pure[F]
     }
   }
@@ -58,7 +63,7 @@ class WordDoobie[F[_] : Async](implicit xa: Transactor[F], userDb: UserDb.Select
     } yield (anyWords.map(baseNoteToWord) ++ nounWords.map(nounNoteToWord)).sequence
 
     query.attempt.transact(xa).flatMap {
-      case Right(x) => x.map(_.sequence)
+      case Right(x) => x.map(_.sequence).map(sortById)
       case Left(t) => DbResult.thr[Seq[Word]](t).pure[F]
     }
   }
