@@ -14,6 +14,7 @@ object StatusMessages {
   def userAlreadyActivated(token: String): String = s"User with token '$token' has been already activated."
 
   def noAccessToGroup(id: Int): String = s"You do not have access to word group with id $id."
+  def noGroupById(id: Int): String = s"Word group with id $id does not exist."
 
   val invalidPassword: String = "Invalid password."
 }
