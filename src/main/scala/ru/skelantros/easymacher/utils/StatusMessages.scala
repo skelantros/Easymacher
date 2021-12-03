@@ -13,5 +13,7 @@ object StatusMessages {
   def userByEmailExists(email: Email): String = s"User with email '${email.asString}' already exists."
   def userAlreadyActivated(token: String): String = s"User with token '$token' has been already activated."
 
+  def noAccessToGroup(id: Int): String = s"You do not have access to word group with id $id."
+
   val invalidPassword: String = "Invalid password."
 }
