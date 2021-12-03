@@ -89,7 +89,6 @@
 - last_name - varchar(32)
 
 ### Word
-**word_type**: enum('sub', 'verb', 'adj', 'zahl', 'pron', 'adverb', 'konj', 'prep', 'part')
 - id - serial, primary key
 - user_id - integer, foreign key to User
 - word - varchar(256), not null
@@ -121,11 +120,3 @@
 ### FlashGroupsToWords
 - flash_id - integer, foreign key to FlashGroup
 - word_id - integr, foreign key to Word
-
-### DerDieDas
-- ddd_id - serial, primary key
-- user_id - integer, foreign key to User
-
-### DDDToWords
-- ddd_id - integer, foreign key to DerDieDas
-- word_id - integer, foreign key to Word
