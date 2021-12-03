@@ -6,9 +6,10 @@ import cats.Monad
 import cats.effect.{Async, MonadCancelThrow}
 import doobie.free.connection.ConnectionIO
 import doobie.util.transactor.Transactor
-import ru.skelantros.easymacher.db.{DbResult, Mistake, Thr}
+import ru.skelantros.easymacher.db.{DbResult, DbUnit, Mistake, Thr}
 import cats.implicits._
 import doobie.implicits._
+import doobie.util.update.Update0
 
 package object doobieimpl {
   def processSelect[F[_] : MonadCancelThrow, A, B](query: ConnectionIO[A])(f: A => B)(implicit xa: Transactor[F]): F[DbResult[B]] =
@@ -30,4 +31,10 @@ package object doobieimpl {
         case Left(Thr(t)) => DbResult.thr(t)
       }
     } yield res
+
+  def processInsert[F[_] : MonadCancelThrow](query: Update0)(implicit xa: Transactor[F]): F[DbUnit] =
+    query.run.attempt.transact(xa).map {
+      case Right(_) => DbResult.unit
+      case Left(t) => DbUnit.thr(t)
+    }
 }
