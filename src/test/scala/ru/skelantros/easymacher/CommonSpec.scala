@@ -6,7 +6,7 @@ import org.http4s._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import ru.skelantros.easymacher.entities.Noun.Gender
-import ru.skelantros.easymacher.entities.{AnyWord, Noun, Role, User}
+import ru.skelantros.easymacher.entities.{AnyWord, Noun, Role, User, WordGroup}
 import ru.skelantros.easymacher.utils.Email
 
 trait CommonSpec extends AnyFlatSpec with Matchers {
@@ -37,5 +37,12 @@ trait CommonSpec extends AnyFlatSpec with Matchers {
     AnyWord(4, "ruhig", Some("спокойный"), adefful),
     Noun(5, "Fenster", Some("окно"), skelantros, Gender.N, Some("Fenster")),
     Noun(6, "Flur", Some("коридор"), skelantros, Gender.M, None)
+  )
+
+  val Seq(machen, arbeiten, stuhl, ruhig, fenster, flur) = wordsSample
+
+  val wordGroupsSample = Seq(
+    WordGroup(1, skelantros, "verbs", false, Seq(machen, arbeiten)),
+    WordGroup(2, skelantros, "nouns", true, Seq(stuhl, fenster, flur))
   )
 }
