@@ -68,7 +68,7 @@ class WordGroupServices[F[_] : Concurrent] {
 
 
   def addWords(u: User)(implicit dbSel: DescSelect[F], dbUpd: Update[F]) = HttpRoutes.of[F] {
-    case req @ POST -> Root / "words-groups" / IntVar(id) / "add-words" =>
+    case req @ POST -> Root / "word-groups" / IntVar(id) / "add-words" =>
       for {
         descDb <- dbSel.descById(id)
         json <- req.as[JsonAddWords]
@@ -79,7 +79,7 @@ class WordGroupServices[F[_] : Concurrent] {
   }
 
   def update(u: User)(implicit dbSel: DescSelect[F], dbUpd: Update[F]) = HttpRoutes.of[F] {
-    case req @ POST -> Root / "words-groups" / IntVar(id) / "update" =>
+    case req @ POST -> Root / "word-groups" / IntVar(id) / "update" =>
       for {
         descDb <- dbSel.descById(id)
         json <- req.as[JsonUpdate]
