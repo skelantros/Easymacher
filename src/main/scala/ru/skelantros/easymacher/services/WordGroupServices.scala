@@ -50,7 +50,7 @@ class WordGroupServices[F[_] : Concurrent] {
           case Right(group) if group.isVisibleTo(u) =>
             Ok(group.words.map(WordServices.JsonOut.fromWord))
           case Right(_) =>
-            Forbidden(StatusMessages.noPermission)
+            Forbidden(StatusMessages.noAccessToGroup(id))
           case Left(error) =>
             responseWithError[F](error)
         }
