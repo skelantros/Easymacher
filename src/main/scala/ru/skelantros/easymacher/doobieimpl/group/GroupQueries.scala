@@ -15,6 +15,7 @@ object GroupQueries {
   private val groupToWordSelectFr = fr"select group_id, word_id from groups_to_words"
 
   def selectGroups = groupSelectFr.query[GroupNote]
+  def selectGroupById(id: Int) = sql"$groupSelectFr where group_id = $id".query[GroupNote]
   def selectGroupsByUserId(userId: Int) = sql"$groupSelectFr where user_id = $userId".query[GroupNote]
   def insertGroup(userId: Int, name: String, isShared: Boolean) =
     sql"insert into word_groups(user_id, g_name, is_shared) values ($userId, $name, $isShared)".update

@@ -4,6 +4,7 @@ import group.GroupQueries._
 class GroupQueriesSpec extends AnalyzeSpec {
   test("selectGroups") { check(selectGroups) }
   test("selectGroupsByUserId") { check(selectGroupsByUserId(1)) }
+  test("selectGroupById") { check(selectGroupById(1)) }
   test("insertGroup") { check(insertGroup(1, "name", true)) }
   test("updateGroup NN") { check(updateGroup(1, None, None)) }
   test("updateGroup SN") { check(updateGroup(1, Some("name"), None)) }
