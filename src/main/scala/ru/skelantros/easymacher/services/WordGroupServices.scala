@@ -29,12 +29,12 @@ class WordGroupServices[F[_] : Concurrent] {
         responseWithError[F](error)
     }
 
-  def allVisible(implicit db: DescSelect[F]) = (u: User) => HttpRoutes.of[F] {
+  def allVisible(u: User)(implicit db: DescSelect[F]) = HttpRoutes.of[F] {
     case GET -> Root / "word-groups" =>
       processDbDef(db.allDescs)(_.filter(_.isVisibleTo(u)).map(JsonOut(_)))
   }
 
-  def byIdVisible(implicit db: DescSelect[F]) = (u: User) => HttpRoutes.of[F] {
+  def byIdVisible(u: User)(implicit db: DescSelect[F]) = HttpRoutes.of[F] {
     case GET -> Root / "word-groups" / IntVar(id) =>
       for {
         dbRes <- db.descById(id)
@@ -42,7 +42,7 @@ class WordGroupServices[F[_] : Concurrent] {
       } yield resp
   }
 
-  def wordsOfGroup(implicit db: Select[F]) = (u: User) => HttpRoutes.of[F] {
+  def wordsOfGroup(u: User)(implicit db: Select[F]) = HttpRoutes.of[F] {
     case GET -> Root / "word-groups" / IntVar(id) / "words" =>
       for {
         dbRes <- db.groupWithWordsById(id)
@@ -57,7 +57,7 @@ class WordGroupServices[F[_] : Concurrent] {
       } yield resp
   }
 
-  def create(implicit db: Update[F]) = (u: User) => HttpRoutes.of[F] {
+  def create(u: User)(implicit db: Update[F]) = HttpRoutes.of[F] {
     case req @ POST -> Root / "word-groups" / "create" =>
       for {
         json <- req.as[JsonCreate]
@@ -67,7 +67,7 @@ class WordGroupServices[F[_] : Concurrent] {
   }
 
 
-  def addWords(implicit dbSel: DescSelect[F], dbUpd: Update[F]) = (u: User) => HttpRoutes.of[F] {
+  def addWords(u: User)(implicit dbSel: DescSelect[F], dbUpd: Update[F]) = HttpRoutes.of[F] {
     case req @ POST -> Root / "words-groups" / IntVar(id) / "add-words" =>
       for {
         descDb <- dbSel.descById(id)
@@ -78,7 +78,7 @@ class WordGroupServices[F[_] : Concurrent] {
       } yield resp
   }
 
-  def update(implicit dbSel: DescSelect[F], dbUpd: Update[F]) = (u: User) => HttpRoutes.of[F] {
+  def update(u: User)(implicit dbSel: DescSelect[F], dbUpd: Update[F]) = HttpRoutes.of[F] {
     case req @ POST -> Root / "words-groups" / IntVar(id) / "update" =>
       for {
         descDb <- dbSel.descById(id)
