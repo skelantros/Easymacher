@@ -20,4 +20,8 @@ object WordGroup {
     }
     def isVisibleTo(user: User): Boolean = isVisibleTo(user.id, user.role)
   }
+  object Desc {
+    def apply(group: WordGroup): Desc =
+      Desc(group.id, group.owner.id, group.name, group.isShared)
+  }
 }
