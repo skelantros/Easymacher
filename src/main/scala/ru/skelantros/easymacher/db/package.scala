@@ -9,11 +9,13 @@ package object db {
     val unit: DbUnit = Right(())
     def mistake[A](msg: String): DbResult[A] = Left(DbError.mistake(msg))
     def thr[A](t: Throwable): DbResult[A] = Left(DbError.thr(t))
+    def error[A](e: DbError): DbResult[A] = Left(e)
   }
 
   object DbUnit {
     def mistake(msg: String): DbUnit = Left(DbError.mistake(msg))
     def thr(t: Throwable): DbUnit = Left(DbError.thr(t))
+    def error(e: DbError): DbUnit = Left(e)
   }
 
   sealed trait DbError {
