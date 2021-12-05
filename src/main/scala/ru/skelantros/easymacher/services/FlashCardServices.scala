@@ -4,7 +4,7 @@ import cats.effect.kernel.Concurrent
 import org.http4s.{EntityDecoder, EntityEncoder, HttpRoutes, Response}
 import org.http4s.circe.jsonOf
 import org.http4s.dsl.Http4sDsl
-import ru.skelantros.easymacher.db.DbResult
+import ru.skelantros.easymacher.db.{DbResult, DbUnit}
 import ru.skelantros.easymacher.entities.{FlashCards, User}
 import FlashCards.{FlashDesc => Desc}
 import ru.skelantros.easymacher.utils.StatusMessages
@@ -64,7 +64,7 @@ class FlashCardServices[F[_] : Concurrent] {
           case Right(group) if group.isVisibleTo(u) =>
             Ok(group.words.map(WordServices.JsonOut.fromWord))
           case Right(_) =>
-            Forbidden(StatusMessages.noAccessToGroup(id))
+            Forbidden(StatusMessages.noAccessToFlashCards(id))
           case Left(error) =>
             responseWithError[F](error)
         }
@@ -88,6 +88,7 @@ class FlashCardServices[F[_] : Concurrent] {
           groups
             .map(g => g.map(dbUpd.addWordsByGroupId(id, _)).sequence.map(_ => DbResult.unit))
             .getOrElse(DbResult.unit.pure[F])
+        case Left(e) => DbUnit.error(e).pure[F]
       }
     } yield res
 
@@ -95,13 +96,13 @@ class FlashCardServices[F[_] : Concurrent] {
   }
 
   def add(u: User)(implicit dbSel: DescSelect[F], dbUpd: Update[F]) = HttpRoutes.of[F] {
-    case req @ POST -> Root / "flash-cards" / IntVar(id) / "add-words" =>
+    case req @ POST -> Root / "flash-cards" / IntVar(id) / "add" =>
       for {
         descDb <- dbSel.descById(id)
         json <- req.as[JsonAdd]
         JsonAdd(wordsOpt, groupsOpt) = json
 
-        resp <- addGroupsWords(id, wordsOpt, groupsOpt)
+        resp <- editAction(descDb, u)(d => addGroupsWords(d.id, wordsOpt, groupsOpt))
       } yield resp
   }
 
