@@ -14,14 +14,14 @@ import FlashCards.{FlashDesc => Desc}
   в областях других "БД" (в данном случае для проверки существования слова нужно обратиться к сущности WordDb.Select)
  */
 object FlashCardDb {
-  trait SelectDesc[F[_]] {
+  trait DescSelect[F[_]] {
     def allDescs: F[DbResult[Seq[Desc]]]
-    def descById: F[DbResult[Desc]]
+    def descById(id: Int): F[DbResult[Desc]]
   }
 
   trait Select[F[_]] {
     def allFlashCards: F[DbResult[Seq[FlashCards]]]
-    def flashCardsById: F[DbResult[FlashCards]]
+    def flashCardsById(id: Int): F[DbResult[FlashCards]]
   }
 
   trait Update[F[_]] {
