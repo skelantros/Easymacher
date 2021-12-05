@@ -95,6 +95,8 @@ class FlashCardServices[F[_] : Concurrent] {
     processDbDef(dbQuery)(identity)
   }
 
+  // TODO этот запрос к сервису не обваливается, если в флеш карточке есть слова из группы
+  // Это правильное поведение, но непонятно, с чем оно связано
   def add(u: User)(implicit dbSel: DescSelect[F], dbUpd: Update[F]) = HttpRoutes.of[F] {
     case req @ POST -> Root / "flash-cards" / IntVar(id) / "add" =>
       for {
