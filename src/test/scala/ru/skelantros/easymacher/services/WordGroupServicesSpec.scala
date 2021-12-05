@@ -165,7 +165,7 @@ class WordGroupServicesSpec extends CommonSpec {
     )
     val req = Request[IO](method = Method.POST, uri=uri"/word-groups/1/add-words").withEntity(body)
     val actualResp = services.addWords(adefful).orNotFound.run(req)
-    check(actualResp, Status.Forbidden, Some(noAccessToGroup(1)))
+    check(actualResp, Status.Forbidden, Some(cannotEditGroup(1)))
   }
 
   it should "do nothing when adding to non-existing group" in {
@@ -207,6 +207,6 @@ class WordGroupServicesSpec extends CommonSpec {
     )
     val req = Request[IO](method = Method.POST, uri=uri"/word-groups/1/update").withEntity(body)
     val actualResp = services.update(adefful).orNotFound.run(req)
-    check(actualResp, Status.Forbidden, Some(noAccessToGroup(1)))
+    check(actualResp, Status.Forbidden, Some(cannotEditGroup(1)))
   }
 }

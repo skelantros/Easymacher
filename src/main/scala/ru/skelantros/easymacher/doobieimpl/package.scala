@@ -11,6 +11,7 @@ import cats.implicits._
 import doobie.implicits._
 import doobie.util.update.Update0
 
+// TODO унифицировать вспомогательные методы этого пакета
 package object doobieimpl {
   object PsqlStates {
     import doobie.postgres._
