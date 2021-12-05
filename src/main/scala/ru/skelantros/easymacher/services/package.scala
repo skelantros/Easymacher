@@ -5,7 +5,7 @@ import cats.implicits._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.dsl.impl.QueryParamDecoderMatcher
 import org.http4s.{EntityEncoder, Response}
-import ru.skelantros.easymacher.db.DbResult
+import ru.skelantros.easymacher.db.{DbError, DbResult}
 import ru.skelantros.easymacher.entities.Role
 import ru.skelantros.easymacher.utils.Email
 import io.circe.{Encoder, Json}
@@ -29,6 +29,15 @@ package object services {
     case "user" => Some(Role.User)
     case "admin" => Some(Role.Admin)
     case _ => None
+  }
+
+  def responseWithError[F[_] : Monad](err: DbError): RespF[F] = {
+    val dsl = new Http4sDsl[F] {}
+    import dsl._
+    err.map(
+      msg => BadRequest(msg),
+      t => logThrowable[F](t) >> InternalServerError(s"$t:\n${t.getMessage}")
+    )
   }
 
   def processDb[F[_] : Monad, A](res: =>F[DbResult[A]])
