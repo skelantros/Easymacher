@@ -4,12 +4,14 @@ import cats.effect.kernel.Async
 import doobie.util.transactor.Transactor
 import ru.skelantros.easymacher.db.{DbResult, DbUnit, UserDb, WordDb}
 import doobie.implicits.toConnectionIOOps
+import doobie.implicits.toDoobieApplicativeErrorOps
 import cats.effect.implicits._
 import cats.implicits._
 import ru.skelantros.easymacher.db.WordGroupDb._
 import ru.skelantros.easymacher.doobieimpl._
 import GroupQueries._
 import cats.data.EitherT
+import org.postgresql.util.PSQLException
 import ru.skelantros.easymacher.entities.{Word, WordGroup}
 import ru.skelantros.easymacher.utils.StatusMessages
 
@@ -65,11 +67,16 @@ class WordGroupDoobie[F[_] : Async](implicit val xa: Transactor[F], wordDb: Word
 
   // TODO слова в данном запросе отправляются в рамках одной транзакции, возможно стоит переделать
   override def addWordsByIds(id: Int, wordsIds: Seq[Int]): F[DbUnit] = {
-    val query = for {
-      _ <- wordsIds.map(insertG2W(id, _).run.void).sequence
-    } yield ()
+    val singleQuery = (wordId: Int) => insertG2W(id, wordId).run.void.attemptSomeSqlState {
+      case PsqlStates.uniqueViolation => StatusMessages.wordAleadyInGroup(wordId, id)
+      case PsqlStates.foreignKeyViolation => StatusMessages.noWordById(wordId)
+    }
 
-    processSelect(query)(identity)
+    val query = for {
+      res <- wordsIds.map(singleQuery).sequence
+    } yield res.sequence
+
+    processSelectUnitEither(query)
   }
 
   override def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbUnit] =

@@ -18,13 +18,23 @@ class WordGroupServices[F[_] : Concurrent] {
   private val dsl = new Http4sDsl[F] {}
   import dsl._
 
-  private def accessAction(dbDesc: DbResult[WordGroup.Desc], u: User)
-                          (ifAccess: WordGroup.Desc => F[Response[F]]): F[Response[F]] =
+  private def visibleAction(dbDesc: DbResult[WordGroup.Desc], u: User)
+                           (ifAccess: WordGroup.Desc => F[Response[F]]): F[Response[F]] =
     dbDesc match {
       case Right(desc) if desc.isVisibleTo(u) =>
         ifAccess(desc)
       case Right(desc) =>
         Forbidden(StatusMessages.noAccessToGroup(desc.id))
+      case Left(error) =>
+        responseWithError[F](error)
+    }
+  private def editAction(dbDesc: DbResult[WordGroup.Desc], u: User)
+                        (ifAccess: WordGroup.Desc => F[Response[F]]): F[Response[F]] =
+    dbDesc match {
+      case Right(desc) if desc.isEditedBy(u) =>
+        ifAccess(desc)
+      case Right(desc) =>
+        Forbidden(StatusMessages.cannotEditGroup(desc.id))
       case Left(error) =>
         responseWithError[F](error)
     }
@@ -41,7 +51,7 @@ class WordGroupServices[F[_] : Concurrent] {
     case GET -> Root / "word-groups" / IntVar(id) =>
       for {
         dbRes <- db.descById(id)
-        resp <- accessAction(dbRes, u)(d => Ok(JsonOut(d)))
+        resp <- visibleAction(dbRes, u)(d => Ok(JsonOut(d)))
       } yield resp
   }
 
@@ -77,7 +87,7 @@ class WordGroupServices[F[_] : Concurrent] {
         json <- req.as[JsonAddWords]
         words = json.words
 
-        resp <- accessAction(descDb, u)(d => processDbDef(dbUpd.addWordsByIds(d.id, words))(identity))
+        resp <- editAction(descDb, u)(d => processDbDef(dbUpd.addWordsByIds(d.id, words))(identity))
       } yield resp
   }
 
@@ -88,7 +98,7 @@ class WordGroupServices[F[_] : Concurrent] {
         json <- req.as[JsonUpdate]
         JsonUpdate(isShared, name) = json
 
-        resp <- accessAction(descDb, u)(d => processDbDef(dbUpd.update(d.id, name, isShared))(identity))
+        resp <- editAction(descDb, u)(d => processDbDef(dbUpd.update(d.id, name, isShared))(identity))
       } yield resp
   }
 }
