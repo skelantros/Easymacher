@@ -25,7 +25,7 @@ class FlashCardServices[F[_] : Concurrent] {
       case Right(desc) if desc.isVisibleTo(u) =>
         ifAccess(desc)
       case Right(desc) =>
-        Forbidden(StatusMessages.noAccessToGroup(desc.id))
+        Forbidden(StatusMessages.noAccessToFlashCards(desc.id))
       case Left(error) =>
         responseWithError[F](error)
     }
@@ -35,7 +35,7 @@ class FlashCardServices[F[_] : Concurrent] {
       case Right(desc) if desc.isEditedBy(u) =>
         ifAccess(desc)
       case Right(desc) =>
-        Forbidden(StatusMessages.cannotEditGroup(desc.id))
+        Forbidden(StatusMessages.cannotEditFlashCards(desc.id))
       case Left(error) =>
         responseWithError[F](error)
     }
