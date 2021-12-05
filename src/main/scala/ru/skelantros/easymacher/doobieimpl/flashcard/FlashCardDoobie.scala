@@ -79,7 +79,7 @@ class FlashCardDoobie[F[_] : Async](implicit val xa: Transactor[F],
 
   override def addWordsByGroupId(id: Int, groupId: Int): F[DbUnit] = {
     val query = for {
-      groupRes <- groupDb.groupWithWordsById(id)
+      groupRes <- groupDb.groupWithWordsById(groupId)
     } yield groupRes.map(_.words.map(_.id))
 
     query.flatMap {
