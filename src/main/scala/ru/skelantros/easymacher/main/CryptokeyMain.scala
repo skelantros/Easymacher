@@ -10,6 +10,7 @@ import org.http4s.implicits._
 import org.http4s._
 import cats.implicits._
 import org.http4s.blaze.server.BlazeServerBuilder
+import org.http4s.server.middleware.{CORS, CORSConfig}
 import ru.skelantros.easymacher.auth.{AuthLifter, CryptokeyAuth, UserRoutes}
 import ru.skelantros.easymacher.doobieimpl.flashcard.FlashCardDoobie
 import ru.skelantros.easymacher.doobieimpl.group.WordGroupDoobie
@@ -48,9 +49,17 @@ object CryptokeyMain extends IOApp {
     flashServices.allServices
   )
 
+  val allServices = unauthServices <+> auth(authNonIdServices) <+> auth(authIdServices)
 
-  val app: HttpApp[IO] =
-    (unauthServices <+> auth(authNonIdServices) <+> auth(authIdServices)).orNotFound
+  val corsConfig = CORSConfig.default
+    .withAnyOrigin(false)
+    .withAllowedOrigins(Set("http://localhost:3000"))
+    .withAnyMethod(true)
+    .withAllowCredentials(true)
+
+  val cors: HttpRoutes[IO] = CORS(allServices, corsConfig)
+
+  val app: HttpApp[IO] = cors.orNotFound
 
   override def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO](global)
