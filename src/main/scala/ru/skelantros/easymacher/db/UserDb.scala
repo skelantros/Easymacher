@@ -41,4 +41,9 @@ object UserDb {
     def createUser(username: String, password: String, email: Email, role: Role): F[DbUnit]
     def activateUser(uuid: String): F[DbUnit]
   }
+
+  trait Auth0[F[_]] {
+    def findByAuth0Id(auth0Id: String): F[DbResult[Option[User]]]
+    def addByAuth0Id(auth0Id: String): F[DbResult[User]]
+  }
 }
