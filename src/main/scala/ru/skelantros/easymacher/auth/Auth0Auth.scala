@@ -24,7 +24,7 @@ class Auth0Auth[F[_] : Sync](config: Auth0Auth.Config)(implicit db: UserDb.Auth0
   import dsl._
 
   private val Config(domain, audience) = config
-  private val issuer = s"https://$domain"
+  private val issuer = s"https://$domain/"
 
   type OrThrowable[A] = Either[Throwable, A]
   type OrThrT[A] = EitherT[F, Throwable, A]
