@@ -61,10 +61,10 @@ class Auth0Auth[F[_] : Sync](config: Auth0Auth.Config)(implicit db: UserDb.Auth0
             case Right(None) => db.addByAuth0Id(sub) map {
               case Right(u) => Right(u)
               case Left(Mistake(msg)) => Left(msg)
-              case Left(Thr(t)) => Left("Internal server error")
+              case Left(Thr(t)) => Left("1: " + t.toString)
             }
             case Left(Mistake(msg)) => (Left(msg) : Either[String, User]).pure[F]
-            case Left(Thr(t)) => (Left("Internal server error") : Either[String, User]).pure[F]
+            case Left(Thr(t)) => (Left("2: " + t.toString) : Either[String, User]).pure[F]
           }
         case Right(_) => (Left("Your jwt doesn't have subject claims") : Either[String, User]).pure[F]
         case Left(m) => (Left(m) : Either[String, User]).pure[F]
