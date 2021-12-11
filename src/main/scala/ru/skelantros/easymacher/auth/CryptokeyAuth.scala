@@ -15,7 +15,7 @@ import ru.skelantros.easymacher.db.{DbError, Mistake, Thr}
 import ru.skelantros.easymacher.entities.User
 import ru.skelantros.easymacher.utils.StatusMessages
 
-class CryptokeyAuth[F[_] : Concurrent](implicit db: Select[F]) {
+class CryptokeyAuth[F[_] : Concurrent](implicit db: Select[F]) extends AuthWare[F] {
   import CryptokeyAuth._
   private val dsl = new Http4sDsl[F] {}
   import dsl._

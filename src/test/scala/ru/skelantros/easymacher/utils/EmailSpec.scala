@@ -7,7 +7,8 @@ class EmailSpec extends AnyFlatSpec with Matchers {
   val correctEmails = Map(
     "skelantros@gmail.com" -> new Email("skelantros", "gmail.com"),
     "test@wat.com.ru" -> new Email("test", "wat.com.ru"),
-    "whynot_228@hello19.com" -> new Email("whynot_228", "hello19.com")
+    "whynot_228@hello19.com" -> new Email("whynot_228", "hello19.com"),
+    "4dd04abc498846f9834b6e6321908520@fromauth0.ru" -> new Email("4dd04abc498846f9834b6e6321908520", "fromauth0.ru")
   )
 
   val incorrectEmails = Seq(

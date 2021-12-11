@@ -33,7 +33,16 @@ lazy val simpleAuthDependencies = Seq(
   "org.reactormonk" %% "cryptobits" % "1.3"
 )
 
+lazy val auth0Dependencies = Seq(
+  "com.pauldijou" %% "jwt-play-json" % "5.0.0",
+  "com.pauldijou" %% "jwt-core" % "5.0.0",
+  "com.auth0" % "jwks-rsa" % "0.20.0"
+)
+
 libraryDependencies ++= http4sDependencies
 libraryDependencies ++= doobieDependencies
 libraryDependencies ++= scalatestDependencies
 libraryDependencies ++= simpleAuthDependencies
+libraryDependencies ++= auth0Dependencies
+
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"

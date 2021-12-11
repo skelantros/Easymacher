@@ -19,7 +19,7 @@ object UserQueries {
       upd.withUniqueGeneratedKeys[Note]("user_id", "email", "username", "activate_token", "is_activated", "passw", "first_name", "last_name", "is_admin")
   }
 
-  private val selectAllFr = fr"select user_id, email, username, activate_token, is_activated, passw, first_name, last_name, is_admin from users"
+  val selectAllFr = fr"select user_id, email, username, activate_token, is_activated, passw, first_name, last_name, is_admin from users"
 
   def selectAll =
     sql"$selectAllFr".query[Note]
