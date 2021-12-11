@@ -25,23 +25,23 @@ class WordMock[F[_] : Monad](init: Seq[Word], val userDb: UserDb.Select[F])
   override def wordsByUserId(userId: Int): F[DbResult[Seq[Word]]] =
     DbResult.of(db.filter(_.owner.id == userId).toSeq).pure[F]
 
-  override def addWord(word: String, translate: Option[String], userId: Int): F[DbUnit] =
+  override def addWord(word: String, translate: Option[String], userId: Int): F[DbResult[Word]] =
     for {
-      u <- userDb.userById(userId)
-      res: DbUnit = u match {
-        case Right(user) =>
-          db += AnyWord(nextId, word, translate, user)
-          DbResult.unit
-        case Left(error) => Left[DbError, Unit](error)
+      uDb <- userDb.userById(userId)
+      res = uDb flatMap { u =>
+        val wordToAdd = AnyWord(nextId, word, translate, u)
+        db += wordToAdd
+        DbResult.of(wordToAdd)
       }
     } yield res
 
-  override def addNoun(word: String, translate: Option[String], gender: Noun.Gender, plural: Option[String], userId: Int): F[DbUnit] =
+  override def addNoun(word: String, translate: Option[String], gender: Noun.Gender, plural: Option[String], userId: Int): F[DbResult[Word]] =
     for {
-      u <- userDb.userById(userId)
-      res: DbUnit = u match {
-        case Right(user) => db += Noun(nextId, word, translate, user, gender, plural); DbResult.unit
-        case Left(error) => Left[DbError, Unit](error)
+      uDb <- userDb.userById(userId)
+      res = uDb.flatMap { u =>
+        val wordToAdd = Noun(nextId, word, translate, u, gender, plural)
+        db += wordToAdd
+        DbResult.of(wordToAdd)
       }
     } yield res
 }

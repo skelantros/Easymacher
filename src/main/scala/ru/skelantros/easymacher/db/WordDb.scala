@@ -17,18 +17,18 @@ object WordDb {
   }
 
   trait AddAny[F[_]] {
-    def addWord(word: String, translate: Option[String], userId: Int): F[DbUnit]
-    def addWord(word: String, userId: Int): F[DbUnit] = addWord(word, None, userId)
-    def addWord(word: String, translate: Option[String], user: User): F[DbUnit] = addWord(word, translate, user.id)
-    def addWord(word: String, user: User): F[DbUnit] = addWord(word, None, user.id)
+    def addWord(word: String, translate: Option[String], userId: Int): F[DbResult[Word]]
+    def addWord(word: String, userId: Int): F[DbResult[Word]] = addWord(word, None, userId)
+    def addWord(word: String, translate: Option[String], user: User): F[DbResult[Word]] = addWord(word, translate, user.id)
+    def addWord(word: String, user: User): F[DbResult[Word]] = addWord(word, None, user.id)
   }
 
   trait AddNoun[F[_]] {
     def addNoun(word: String, translate: Option[String],
                 gender: Noun.Gender, plural: Option[String],
-                userId: Int): F[DbUnit]
+                userId: Int): F[DbResult[Word]]
     def addNoun(word: String, translate: Option[String],
                 gender: Noun.Gender, plural: Option[String],
-                user: User): F[DbUnit] = addNoun(word, translate, gender, plural, user.id)
+                user: User): F[DbResult[Word]] = addNoun(word, translate, gender, plural, user.id)
   }
 }

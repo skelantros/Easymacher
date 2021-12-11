@@ -93,10 +93,6 @@ class WordServicesSpec extends CommonSpec {
       "translate" := "искать"
     )
 
-    val req = Request[IO](method = Method.POST, uri=uri"/add-word").withEntity(word)
-    val actualResp = services.addWord(skelantros).orNotFound.run(req)
-    check(actualResp, Status.Ok, Some(()))
-
     val wordSaved = Json.obj(
       "word" := "suchen",
       "translate" := "искать",
@@ -104,6 +100,10 @@ class WordServicesSpec extends CommonSpec {
       "id" := 7,
       "owner" := 1
     )
+
+    val req = Request[IO](method = Method.POST, uri=uri"/add-word").withEntity(word)
+    val actualResp = services.addWord(skelantros).orNotFound.run(req)
+    check(actualResp, Status.Ok, Some(wordSaved))
 
     val req2 = Request[IO](method = Method.GET, uri=uri"/words?id=7")
     val actualResp2 = services.ofUserById(skelantros).orNotFound.run(req2)
@@ -129,7 +129,7 @@ class WordServicesSpec extends CommonSpec {
 
     val req = Request[IO](method = Method.POST, uri=uri"/add-word").withEntity(word)
     val actualResp = services.addWord(skelantros).orNotFound.run(req)
-    check(actualResp, Status.Ok, Some(()))
+    check(actualResp, Status.Ok, Some(arztJson))
 
     val req2 = Request[IO](method = Method.GET, uri=uri"/words?id=7")
     val actualResp2 = services.ofUserById(skelantros).orNotFound.run(req2)
@@ -145,7 +145,7 @@ class WordServicesSpec extends CommonSpec {
 
     val req = Request[IO](method = Method.POST, uri=uri"/add-word").withEntity(word)
     val actualResp = services.addWord(skelantros).orNotFound.run(req)
-    check(actualResp, Status.Ok, Some(()))
+    check(actualResp, Status.Ok, Some(arztJson))
 
     val req2 = Request[IO](method = Method.GET, uri=uri"/words?id=7")
     val actualResp2 = services.ofUserById(skelantros).orNotFound.run(req2)

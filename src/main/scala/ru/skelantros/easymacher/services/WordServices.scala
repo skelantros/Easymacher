@@ -52,9 +52,9 @@ class WordServices[F[_] : Concurrent] {
         lazy val dbReq = jsonInp.genderOpt match {
           case Some(g) => db.addNoun(word, translate, g, plural, user)
           case None if !typ.map(_.toLowerCase).contains("noun") => db.addWord(word, translate, user)
-          case _ => DbResult.mistake[Unit](noGenderNoun).pure[F]
+          case _ => DbResult.mistake[Word](noGenderNoun).pure[F]
         }
-        processDbDef(dbReq)(identity)
+        processDbDef(dbReq)(JsonOut.fromWord)
       }
   }
 }

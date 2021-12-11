@@ -68,25 +68,25 @@ class WordDoobie[F[_] : Async](implicit xa: Transactor[F], userDb: UserDb.Select
     }
   }
 
-  override def addWord(word: String, translate: Option[String], userId: Int): F[DbUnit] = {
-    val query = insertBase(userId, word, translate, None, false)
+  override def addWord(word: String, translate: Option[String], userId: Int): F[DbResult[Word]] = {
+    val query = insertBase(userId, word, translate, None, false).baseNote
 
-    query.run.attempt.transact(xa).map {
-      case Right(_) => DbResult.unit
-      case Left(t) => DbResult.thr(t)
+    query.attempt.transact(xa).flatMap {
+      case Right(base) => wordById(base.id)
+      case Left(t) => DbResult.thr[Word](t).pure[F]
     }
   }
 
-  override def addNoun(word: String, translate: Option[String], gender: Noun.Gender, plural: Option[String], userId: Int): F[DbUnit] = {
+  override def addNoun(word: String, translate: Option[String], gender: Noun.Gender, plural: Option[String], userId: Int): F[DbResult[Word]] = {
     val query = for {
       base <- insertBase(userId, word, translate, None, true).baseNote
       wordId = base.id
       noun <- insertNoun(wordId, plural, DbGender(gender)).run
-    } yield ()
+    } yield base
 
-    query.attempt.transact(xa).map {
-      case Right(()) => DbResult.unit
-      case Left(t) => DbResult.thr(t)
+    query.attempt.transact(xa).flatMap {
+      case Right(base) => wordById(base.id)
+      case Left(t) => DbResult.thr[Word](t).pure[F]
     }
   }
 }
