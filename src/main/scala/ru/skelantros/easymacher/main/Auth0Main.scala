@@ -3,7 +3,7 @@ package ru.skelantros.easymacher.main
 import cats.effect.{ExitCode, IO, IOApp}
 import org.http4s.{HttpApp, HttpRoutes}
 import org.http4s.blaze.server.BlazeServerBuilder
-import org.http4s.server.middleware.{CORS, CORSConfig}
+import org.http4s.server.middleware.{CORS, CORSConfig, Logger}
 import ru.skelantros.easymacher.auth.{Auth0Auth, AuthLifter, CryptokeyAuth, UserRoutes}
 import ru.skelantros.easymacher.doobieimpl.flashcard.FlashCardDoobie
 import ru.skelantros.easymacher.doobieimpl.group.WordGroupDoobie
@@ -59,7 +59,7 @@ object Auth0Main extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO](global)
       .bindHttp(8080, "localhost")
-      .withHttpApp(app)
+      .withHttpApp(Logger.httpApp(true, true)(app))
       .serve
       .compile
       .drain
