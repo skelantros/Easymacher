@@ -31,4 +31,8 @@ object WordDb {
                 gender: Noun.Gender, plural: Option[String],
                 user: User): F[DbResult[Word]] = addNoun(word, translate, gender, plural, user.id)
   }
+
+  trait Remove[F[_]] {
+    def removeById(id: Int): F[DbUnit]
+  }
 }

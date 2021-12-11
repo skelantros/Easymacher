@@ -10,9 +10,11 @@ import ru.skelantros.easymacher.entities.{AnyWord, Noun, Word}
 import cats.implicits._
 import doobie.free.connection.ConnectionIO
 import doobie.implicits._
+import ru.skelantros.easymacher.doobieimpl.flashcard.FlashCardQueries
+import ru.skelantros.easymacher.doobieimpl.group.GroupQueries
 
 class WordDoobie[F[_] : Async](implicit xa: Transactor[F], userDb: UserDb.Select[F])
-  extends Select[F] with AddAny[F] with AddNoun[F] {
+  extends Select[F] with AddAny[F] with AddNoun[F] with Remove[F] {
 
   // временное решение, связанное с тем, что на самом деле сначала прогружаются просто слова, а потом - существительные
   // TODO реализовать запросы так, чтобы не приходилось проводить эту сортировку!
@@ -87,6 +89,15 @@ class WordDoobie[F[_] : Async](implicit xa: Transactor[F], userDb: UserDb.Select
     query.attempt.transact(xa).flatMap {
       case Right(base) => wordById(base.id)
       case Left(t) => DbResult.thr[Word](t).pure[F]
+    }
+  }
+
+  override def removeById(id: Int): F[DbUnit] = {
+    val query = deleteBase(id).update.run.void
+
+    query.attempt.transact(xa).map {
+      case Right(()) => DbResult.unit
+      case Left(t) => DbUnit.thr(t)
     }
   }
 }

@@ -45,6 +45,7 @@ object CryptokeyMain extends IOApp {
     userServices.updateServices(_),
     wordServices.selectUserServices,
     wordServices.addWord(_),
+    wordServices.removeServices,
     groupServices.allServices,
     flashServices.allServices
   )

@@ -34,4 +34,7 @@ object FlashCardQueries {
     sql"$groupToWordSelectFr where cards_id = $cardsId".query[FC2WNote]
   def insertFC2W(cardsId: Int, wordId: Int) =
     sql"insert into flash_cards_to_words(cards_id, word_id) values ($cardsId, $wordId)".update
+
+  def deleteAllByWordId(wordId: Int) =
+    sql"delete from flash_cards_to_words where word_id = $wordId"
 }

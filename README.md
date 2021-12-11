@@ -90,7 +90,7 @@
 
 ### Word
 - id - serial, primary key
-- user_id - integer, foreign key to User
+- user_id - integer, foreign key to User, cascade delete
 - word - varchar(256), not null
 - translate - varchar(256)
 - info - varchar(256)
@@ -99,24 +99,24 @@
 ### Noun
 **gender**: enum('m', 'f', 'n')
 - id - serial, primary key
-- word_id - integer, foreign key to Word
+- word_id - integer, foreign key to Word, cascade delete
 - plural - varchar(256)
 - w_gender - gender, not null
 
 ### WordGroup
 - id - serial, primary key
-- user_id - integer, foreign key to User
+- user_id - integer, foreign key to User, cascade delete
 - g_name - varchar(256), not null
 - is_shared - boolean, not null
 
 ### GroupsToWords
-- group_id - integer, foreign key to WordGroup
-- word_id - integer, foreign key to Word
+- group_id - integer, foreign key to WordGroup, cascade delete
+- word_id - integer, foreign key to Word, cascade delete
 
 ### FlashGroup
 - id - serial, primary key
-- user_id - integer, foreign key to User
+- user_id - integer, foreign key to User, cascade delete
 
 ### FlashGroupsToWords
-- flash_id - integer, foreign key to FlashGroup
-- word_id - integr, foreign key to Word
+- flash_id - integer, foreign key to FlashGroup, cascade delete
+- word_id - integr, foreign key to Word, cascade delete

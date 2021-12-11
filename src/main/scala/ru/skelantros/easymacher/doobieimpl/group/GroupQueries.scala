@@ -35,4 +35,7 @@ object GroupQueries {
     sql"$groupToWordSelectFr where group_id = $groupId".query[GroupToWordNote]
   def insertG2W(groupId: Int, wordId: Int) =
     sql"insert into groups_to_words(group_id, word_id) values ($groupId, $wordId)".update
+
+  def deleteAllByWordId(wordId: Int) =
+    sql"delete from groups_to_words where word_id = $wordId"
 }

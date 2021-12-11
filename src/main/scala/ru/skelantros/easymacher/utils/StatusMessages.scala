@@ -14,6 +14,7 @@ object StatusMessages {
   def userAlreadyActivated(token: String): String = s"User with token '$token' has been already activated."
 
   def noWordById(id: Int): String = s"Word with id $id does not exist."
+  def cannotRemoveWord(id: Int): String = s"You cannot remove word with id $id."
 
   def noAccessToGroup(id: Int): String = s"You do not have access to word group with id $id."
   def cannotEditGroup(id: Int): String = s"You cannot edit the word group with id $id."

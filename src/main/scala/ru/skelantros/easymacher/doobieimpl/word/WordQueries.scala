@@ -43,4 +43,9 @@ object WordQueries {
     def baseNote: ConnectionIO[BaseNote] =
       update.withUniqueGeneratedKeys[BaseNote]("word_id", "user_id", "word", "w_translate", "w_info")
   }
+
+  def deleteBase(wordId: Int) =
+    sql"delete from words_base where word_id = $wordId"
+  def deleteNoun(wordId: Int) =
+    sql"delete from words_nouns where word_id = $wordId"
 }
