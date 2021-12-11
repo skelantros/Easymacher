@@ -44,3 +44,5 @@ libraryDependencies ++= doobieDependencies
 libraryDependencies ++= scalatestDependencies
 libraryDependencies ++= simpleAuthDependencies
 libraryDependencies ++= auth0Dependencies
+
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
