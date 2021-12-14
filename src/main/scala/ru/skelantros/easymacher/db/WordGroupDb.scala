@@ -32,5 +32,6 @@ object WordGroupDb {
     def addWordsByIds(id: Int, wordsIds: Seq[Int]): F[DbUnit]
     def addWords(id: Int, words: Seq[Word]): F[DbUnit] = addWordsByIds(id, words.map(_.id))
     def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbUnit]
+    def remove(id: Int): F[DbUnit]
   }
 }

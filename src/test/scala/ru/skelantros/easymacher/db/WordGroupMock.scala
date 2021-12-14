@@ -66,4 +66,10 @@ class WordGroupMock[F[_] : Monad](init: Seq[WordGroup],
         groups(idxOf) = g.copy(isShared = newShared, name = newName)
       }
     } yield res
+
+  override def remove(id: Int): F[DbUnit] = {
+    val idx = groups.indexWhere(_.id == id)
+    if(idx != -1) groups.remove(idx)
+    DbResult.unit.pure[F]
+  }
 }

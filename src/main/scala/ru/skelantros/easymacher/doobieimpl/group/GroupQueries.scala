@@ -38,4 +38,7 @@ object GroupQueries {
 
   def deleteAllByWordId(wordId: Int) =
     sql"delete from groups_to_words where word_id = $wordId"
+
+  def deleteGroup(groupId: Int): Update0 =
+    sql"delete from word_groups where group_id = $groupId".update
 }

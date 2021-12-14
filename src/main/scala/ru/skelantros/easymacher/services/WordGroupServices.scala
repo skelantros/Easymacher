@@ -40,7 +40,8 @@ class WordGroupServices[F[_] : Concurrent] {
     }
 
   def allServices(implicit db: DescSelect[F], db2: Select[F], db3: Update[F]): User => HttpRoutes[F] =
-    u => allVisible(u) <+> byIdVisible(u) <+> byUserIdVisible(u) <+> wordsOfGroup(u) <+> create(u) <+> addWords(u) <+> update(u)
+    u => allVisible(u) <+> byIdVisible(u) <+> byUserIdVisible(u) <+> wordsOfGroup(u) <+>
+      create(u) <+> addWords(u) <+> update(u) <+> remove(u)
 
   def allVisible(u: User)(implicit db: DescSelect[F]) = HttpRoutes.of[F] {
     case GET -> Root / "word-groups" =>
@@ -104,6 +105,14 @@ class WordGroupServices[F[_] : Concurrent] {
         JsonUpdate(isShared, name) = json
 
         resp <- editAction(descDb, u)(d => processDbDef(dbUpd.update(d.id, name, isShared))(identity))
+      } yield resp
+  }
+
+  def remove(u: User)(implicit dbSel: DescSelect[F], dbUpd: Update[F]) = HttpRoutes.of[F] {
+    case POST -> Root / "word-groups" / IntVar(id) / "remove" =>
+      for {
+        descDb <- dbSel.descById(id)
+        resp <- editAction(descDb, u)(d => processDbDef(dbUpd.remove(d.id))(identity))
       } yield resp
   }
 }

@@ -84,4 +84,7 @@ class WordGroupDoobie[F[_] : Async](implicit val xa: Transactor[F], wordDb: Word
 
   override def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbUnit] =
     processInsert(updateGroup(id, name, isShared))
+
+  override def remove(id: Int): F[DbUnit] =
+    processInsert(deleteGroup(id))
 }
