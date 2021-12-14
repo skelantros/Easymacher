@@ -81,7 +81,7 @@ class WordGroupServices[F[_] : Concurrent] {
       for {
         json <- req.as[JsonCreate]
         JsonCreate(name, isShared) = json
-        resp <- processDbDef(db.createGroup(u, name, isShared))(identity)
+        resp <- processDbDef(db.createGroup(u, name, isShared))(JsonOut(_))
       } yield resp
   }
 
@@ -104,7 +104,7 @@ class WordGroupServices[F[_] : Concurrent] {
         json <- req.as[JsonUpdate]
         JsonUpdate(isShared, name) = json
 
-        resp <- editAction(descDb, u)(d => processDbDef(dbUpd.update(d.id, name, isShared))(identity))
+        resp <- editAction(descDb, u)(d => processDbDef(dbUpd.update(d.id, name, isShared))(JsonOut(_)))
       } yield resp
   }
 

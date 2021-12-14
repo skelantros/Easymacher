@@ -14,7 +14,7 @@ object GroupQueries {
 
   implicit class UpdateToDesc(upd: Update0) {
     def groupNote: ConnectionIO[GroupNote] =
-      upd.withUniqueGeneratedKeys("group_id", "owner_id", "g_name", "is_shared")
+      upd.withUniqueGeneratedKeys[GroupNote]("group_id", "user_id", "g_name", "is_shared")
   }
 
   private val groupSelectFr = fr"select group_id, user_id, g_name, is_shared from word_groups"
