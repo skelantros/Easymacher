@@ -59,7 +59,7 @@ package object doobieimpl {
       }
     } yield res
 
-  def processInsert[F[_] : MonadCancelThrow](query: Update0)(implicit xa: Transactor[F]): F[DbUnit] =
+  def processUpdate[F[_] : MonadCancelThrow](query: Update0)(implicit xa: Transactor[F]): F[DbUnit] =
     query.run.attempt.transact(xa).map {
       case Right(_) => DbResult.unit
       case Left(t) => DbUnit.thr(t)

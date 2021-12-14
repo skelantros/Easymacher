@@ -66,7 +66,7 @@ class WordGroupDoobie[F[_] : Async](implicit val xa: Transactor[F], wordDb: Word
   }
 
   override def createGroup(userId: Int, name: String, isShared: Boolean): F[DbUnit] =
-    processInsert(insertGroup(userId, name, isShared))
+    processUpdate(insertGroup(userId, name, isShared))
 
   // TODO слова в данном запросе отправляются в рамках одной транзакции, возможно стоит переделать
   override def addWordsByIds(id: Int, wordsIds: Seq[Int]): F[DbUnit] = {
@@ -83,8 +83,8 @@ class WordGroupDoobie[F[_] : Async](implicit val xa: Transactor[F], wordDb: Word
   }
 
   override def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbUnit] =
-    processInsert(updateGroup(id, name, isShared))
+    processUpdate(updateGroup(id, name, isShared))
 
   override def remove(id: Int): F[DbUnit] =
-    processInsert(deleteGroup(id))
+    processUpdate(deleteGroup(id))
 }
