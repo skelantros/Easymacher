@@ -2,6 +2,7 @@ package ru.skelantros.easymacher.doobieimpl.group
 
 import doobie.implicits._
 import cats.implicits._
+import doobie.free.connection.ConnectionIO
 import doobie.util.update.Update0
 import ru.skelantros.easymacher.entities.WordGroup.Desc
 
@@ -10,6 +11,11 @@ object GroupQueries {
     def toDesc: Desc = Desc(id, ownerId, name, isShared)
   }
   case class GroupToWordNote(groupId: Int, wordId: Int)
+
+  implicit class UpdateToDesc(upd: Update0) {
+    def groupNote: ConnectionIO[GroupNote] =
+      upd.withUniqueGeneratedKeys("group_id", "owner_id", "g_name", "is_shared")
+  }
 
   private val groupSelectFr = fr"select group_id, user_id, g_name, is_shared from word_groups"
   private val groupToWordSelectFr = fr"select group_id, word_id from groups_to_words"

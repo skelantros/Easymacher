@@ -12,6 +12,7 @@ import ru.skelantros.easymacher.doobieimpl._
 import GroupQueries._
 import cats.data.EitherT
 import org.postgresql.util.PSQLException
+import ru.skelantros.easymacher.entities.WordGroup.Desc
 import ru.skelantros.easymacher.entities.{Word, WordGroup}
 import ru.skelantros.easymacher.utils.StatusMessages
 
@@ -65,8 +66,8 @@ class WordGroupDoobie[F[_] : Async](implicit val xa: Transactor[F], wordDb: Word
     }
   }
 
-  override def createGroup(userId: Int, name: String, isShared: Boolean): F[DbUnit] =
-    processUpdate(insertGroup(userId, name, isShared))
+  override def createGroup(userId: Int, name: String, isShared: Boolean): F[DbResult[Desc]] =
+    processSelect(insertGroup(userId, name, isShared).groupNote)(_.toDesc)
 
   // TODO слова в данном запросе отправляются в рамках одной транзакции, возможно стоит переделать
   override def addWordsByIds(id: Int, wordsIds: Seq[Int]): F[DbUnit] = {
@@ -82,8 +83,8 @@ class WordGroupDoobie[F[_] : Async](implicit val xa: Transactor[F], wordDb: Word
     processSelectUnitEither(query)
   }
 
-  override def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbUnit] =
-    processUpdate(updateGroup(id, name, isShared))
+  override def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbResult[Desc]] =
+    processSelect(updateGroup(id, name, isShared).groupNote)(_.toDesc)
 
   override def remove(id: Int): F[DbUnit] =
     processUpdate(deleteGroup(id))
