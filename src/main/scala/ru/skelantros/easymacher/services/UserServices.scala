@@ -70,6 +70,11 @@ class UserServices[F[_] : Concurrent] {
       )(em => processDbDef(db.userByEmail(em))(userLight))
   }
 
+  def currentUser(user: User)(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
+    case GET -> Root / "profile" =>
+      Ok(userLight(user))
+  }
+
   def updatePassword(user: User)(implicit db: Update[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "update-password" =>
       val body = req.as[UpdPassword]
