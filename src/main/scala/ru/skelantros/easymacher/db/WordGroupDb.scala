@@ -18,6 +18,7 @@ object WordGroupDb {
   trait DescSelect[F[_]] {
     def allDescs: F[DbResult[Seq[Desc]]]
     def descById(id: Int): F[DbResult[Desc]]
+    def descsByOwner(ownerId: Int): F[DbResult[Seq[Desc]]]
   }
 
   trait Select[F[_]] {

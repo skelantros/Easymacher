@@ -25,6 +25,7 @@ package object services {
   object RoleParam extends QueryParamDecoderMatcher[String]("role")
   object EmailParam extends QueryParamDecoderMatcher[String]("email")
   object ActivateTokenParam extends QueryParamDecoderMatcher[String]("token")
+  object UserIdParam extends QueryParamDecoderMatcher[Int]("user")
   def parseRole(str: String): Option[Role] = str.toLowerCase match {
     case "user" => Some(Role.User)
     case "admin" => Some(Role.Admin)

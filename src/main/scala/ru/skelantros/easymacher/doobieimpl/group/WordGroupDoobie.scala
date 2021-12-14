@@ -27,6 +27,9 @@ class WordGroupDoobie[F[_] : Async](implicit val xa: Transactor[F], wordDb: Word
   override def descById(id: Int): F[DbResult[WordGroup.Desc]] =
     processOptSelect(selectGroupById(id).option)(_.toDesc, StatusMessages.noGroupById(id))
 
+  override def descsByOwner(ownerId: Int): F[DbResult[Seq[WordGroup.Desc]]] =
+    processSelect(selectGroupsByUserId(ownerId).to[Seq])(_.map(_.toDesc))
+
   private def wordGroup(gNote: GroupNote, wordsIds: Seq[Int]): F[DbResult[WordGroup]] = {
     val userRes = EitherT(userDb.userById(gNote.ownerId))
     val wordsRes = EitherT(wordsIds.map(wordDb.wordById).sequence.map(_.sequence))

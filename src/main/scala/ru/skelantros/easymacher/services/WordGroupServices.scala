@@ -40,11 +40,16 @@ class WordGroupServices[F[_] : Concurrent] {
     }
 
   def allServices(implicit db: DescSelect[F], db2: Select[F], db3: Update[F]): User => HttpRoutes[F] =
-    u => allVisible(u) <+> byIdVisible(u) <+> wordsOfGroup(u) <+> create(u) <+> addWords(u) <+> update(u)
+    u => allVisible(u) <+> byIdVisible(u) <+> byUserIdVisible(u) <+> wordsOfGroup(u) <+> create(u) <+> addWords(u) <+> update(u)
 
   def allVisible(u: User)(implicit db: DescSelect[F]) = HttpRoutes.of[F] {
     case GET -> Root / "word-groups" =>
       processDbDef(db.allDescs)(_.filter(_.isVisibleTo(u)).map(JsonOut(_)))
+  }
+
+  def byUserIdVisible(u: User)(implicit db: DescSelect[F]) = HttpRoutes.of[F] {
+    case GET -> Root / "word-groups" :? UserIdParam(userId) =>
+      processDbDef(db.descsByOwner(userId))(_.filter(_.isVisibleTo(u)).map(JsonOut(_)))
   }
 
   def byIdVisible(u: User)(implicit db: DescSelect[F]) = HttpRoutes.of[F] {

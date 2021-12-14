@@ -22,6 +22,11 @@ class WordGroupMock[F[_] : Monad](init: Seq[WordGroup],
   override def descById(id: Int): F[DbResult[WordGroup.Desc]] =
     groupWithWordsById(id).map(_.map(Desc(_)))
 
+  override def descsByOwner(ownerId: Int): F[DbResult[Seq[Desc]]] =
+    DbResult.of(groups.toSeq.collect {
+      case g if g.ownerId == ownerId => Desc(g)
+    }).pure[F]
+
   override def allGroups: F[DbResult[Seq[WordGroup]]] = DbResult.of(groups.toSeq).pure[F]
 
   override def groupWithWordsById(id: Int): F[DbResult[WordGroup]] =
