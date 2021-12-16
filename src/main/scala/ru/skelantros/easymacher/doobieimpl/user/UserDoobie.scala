@@ -30,12 +30,13 @@ class UserDoobie[F[_] : Async](implicit val xa: Transactor[F]) extends Select[F]
   override def userByEmail(email: Email): F[DbResult[User]] =
     processOptSelect(selectByEmail(email.asString).option)(_.toUser, noUserByEmail(email))
 
-  override def updatePassword(id: Int, oldPassword: String, newPassword: String): F[DbUnit] = ???
+  override def updatePassword(id: Int, oldPassword: String, newPassword: String): F[DbResult[User]] = ???
     
 
-  override def updateInfo(id: Int, firstName: Option[String], lastName: Option[String], username: Option[String], email: Option[Email]): F[DbUnit] =
-    if(firstName.isEmpty && lastName.isEmpty && username.isEmpty && email.isEmpty) DbResult.unit.pure[F]
-    else processSelect(update(id, email.map(_.asString), username, firstName, lastName).note)(_ => ())
+  override def updateInfo(id: Int, firstName: Option[String], lastName: Option[String], username: Option[String], email: Option[Email]): F[DbResult[User]] =
+    if(firstName.isEmpty && lastName.isEmpty && username.isEmpty && email.isEmpty)
+      userById(id)
+    else processSelect(update(id, email.map(_.asString), username, firstName, lastName).note)(_.toUser)
 
   private def generateToken: F[String] = Sync[F].blocking(UUID.randomUUID().toString.filter(_ != '-'))
 

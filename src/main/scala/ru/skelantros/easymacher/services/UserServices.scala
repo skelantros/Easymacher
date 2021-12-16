@@ -32,10 +32,10 @@ class UserServices[F[_] : Concurrent] {
   private def updateUserInfo(user: User, updInfo: UpdInfo)(implicit db: Update[F]): F[Response[F]] = {
     val UpdInfo(emailOpt, username, firstName, lastName) = updInfo
     emailOpt match {
-      case None => processDbDef(db.updateInfo(user.id, firstName, lastName, username, None))(identity)
+      case None => processDbDef(db.updateInfo(user.id, firstName, lastName, username, None))(userLight)
       case Some(emStr) => Email(emStr).fold(
         BadRequest("Incorrect email")
-      )(email => processDbDef(db.updateInfo(user.id, firstName, lastName, username, Some(email)))(identity))
+      )(email => processDbDef(db.updateInfo(user.id, firstName, lastName, username, Some(email)))(userLight))
     }
   }
 
@@ -102,7 +102,7 @@ class UserServices[F[_] : Concurrent] {
     case req @ POST -> Root / "update-password" =>
       val body = req.as[UpdPassword]
       body.flatMap { updPass =>
-        processDbDef(db.updatePassword(user.id, updPass.old, updPass.`new`))(identity)
+        processDbDef(db.updatePassword(user.id, updPass.old, updPass.`new`))(userLight)
       }
   }
 
