@@ -14,4 +14,5 @@ class GroupQueriesSpec extends AnalyzeSpec {
   test("selectG2WByGroupId") { check(selectG2WByGroupId(1)) }
   test("insertG2W") { check(insertG2W(1, 1)) }
   test("deleteGroup") { check(deleteGroup(1)) }
+  test("deleteAllG2WByGroupId") { check(deleteAllG2WByGroupId(1)) }
 }

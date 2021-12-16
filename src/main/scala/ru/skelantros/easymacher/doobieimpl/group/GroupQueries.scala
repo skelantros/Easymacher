@@ -49,4 +49,8 @@ object GroupQueries extends DoobieLogging {
 
   def deleteGroup(groupId: Int): Update0 =
     sql"delete from word_groups where group_id = $groupId".update
+
+  def deleteAllG2WByGroupId(id: Int) =
+    sql"delete from groups_to_words where group_id = $id".update
+
 }

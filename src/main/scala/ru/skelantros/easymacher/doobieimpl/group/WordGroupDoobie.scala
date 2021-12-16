@@ -17,7 +17,7 @@ import ru.skelantros.easymacher.entities.{Word, WordGroup}
 import ru.skelantros.easymacher.utils.StatusMessages
 
 class WordGroupDoobie[F[_] : Async](implicit val xa: Transactor[F], wordDb: WordDb.Select[F], userDb: UserDb.Select[F])
-  extends DescSelect[F] with Select[F] with Update[F] {
+  extends DescSelect[F] with Select[F] with Update[F] with RewriteWords[F] {
 
   override def allDescs: F[DbResult[Seq[WordGroup.Desc]]] =
     selectGroups.to[Seq].attempt.transact(xa).map {
@@ -88,4 +88,17 @@ class WordGroupDoobie[F[_] : Async](implicit val xa: Transactor[F], wordDb: Word
 
   override def remove(id: Int): F[DbUnit] =
     processUpdate(deleteGroup(id))
+
+  override def rewriteWordsByIds(id: Int, newWords: Seq[Int]): F[DbUnit] = {
+    val insertQuery = (wordId: Int) => insertG2W(id, wordId).run.void.attemptSomeSqlState {
+      case PsqlStates.foreignKeyViolation => StatusMessages.noWordById(wordId)
+    }
+
+    val query = for {
+      _ <- deleteAllG2WByGroupId(id).run
+      res <- newWords.map(insertQuery).sequence
+    } yield res.sequence
+
+    processSelectUnitEither(query)
+  }
 }

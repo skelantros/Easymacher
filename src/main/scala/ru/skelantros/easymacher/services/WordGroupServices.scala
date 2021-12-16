@@ -39,9 +39,9 @@ class WordGroupServices[F[_] : Concurrent] {
         responseWithError[F](error)
     }
 
-  def allServices(implicit db: DescSelect[F], db2: Select[F], db3: Update[F]): User => HttpRoutes[F] =
+  def allServices(implicit db: DescSelect[F], db2: Select[F], db3: Update[F], db4: RewriteWords[F]): User => HttpRoutes[F] =
     u => allVisible(u) <+> byIdVisible(u) <+> byUserIdVisible(u) <+> wordsOfGroup(u) <+>
-      create(u) <+> addWords(u) <+> update(u) <+> remove(u)
+      create(u) <+> addWords(u) <+> update(u) <+> remove(u) <+> rewrite(u)
 
   def allVisible(u: User)(implicit db: DescSelect[F]) = HttpRoutes.of[F] {
     case GET -> Root / "word-groups" =>
@@ -113,6 +113,17 @@ class WordGroupServices[F[_] : Concurrent] {
       for {
         descDb <- dbSel.descById(id)
         resp <- editAction(descDb, u)(d => processDbDef(dbUpd.remove(d.id))(identity))
+      } yield resp
+  }
+
+  def rewrite(u: User)(implicit dbSel: DescSelect[F], db: RewriteWords[F]) = HttpRoutes.of[F] {
+    case req @ POST -> Root / "word-groups" / IntVar(id) / "rewrite-words" =>
+      for {
+        descDb <- dbSel.descById(id)
+        json <- req.as[JsonAddWords]
+        words = json.words
+
+        resp <- editAction(descDb, u)(d => processDbDef(db.rewriteWordsByIds(d.id, words))(identity))
       } yield resp
   }
 }

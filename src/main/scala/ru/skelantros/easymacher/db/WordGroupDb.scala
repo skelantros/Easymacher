@@ -34,4 +34,9 @@ object WordGroupDb {
     def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbResult[Desc]]
     def remove(id: Int): F[DbUnit]
   }
+
+  trait RewriteWords[F[_]] {
+    def rewriteWords(id: Int, newWords: Seq[Word]): F[DbUnit] = rewriteWordsByIds(id, newWords.map(_.id))
+    def rewriteWordsByIds(id: Int, newWords: Seq[Int]): F[DbUnit]
+  }
 }
