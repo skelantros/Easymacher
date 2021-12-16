@@ -8,6 +8,7 @@ object StatusMessages {
   def noUserByUsername(username: String): String = s"User with username '$username' does not exist."
   def noUserByEmail(email: Email): String = s"User with email '${email.asString}' does not exist."
   def noUserByToken(token: String): String = s"Invalid token '$token'."
+  def cannotEditUser(id: Int) = s"You cannot edit/remove user with id $id."
 
   def userByUsernameExists(username: String): String = s"User with username '$username' already exists."
   def userByEmailExists(email: Email): String = s"User with email '${email.asString}' already exists."
