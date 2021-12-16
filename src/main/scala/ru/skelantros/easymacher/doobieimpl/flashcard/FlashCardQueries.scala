@@ -3,8 +3,9 @@ package ru.skelantros.easymacher.doobieimpl.flashcard
 import ru.skelantros.easymacher.entities.FlashCards.{FlashDesc => Desc}
 import doobie.implicits._
 import doobie.util.update.Update0
+import ru.skelantros.easymacher.doobieimpl.DoobieLogging
 
-object FlashCardQueries {
+object FlashCardQueries extends DoobieLogging {
   case class FCNote(id: Int, ownerId: Int, name: String, isShared: Boolean) {
     def toDesc: Desc = Desc(id, name, ownerId, isShared)
   }

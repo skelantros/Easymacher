@@ -5,8 +5,9 @@ import ru.skelantros.easymacher.entities.{Role, User}
 import ru.skelantros.easymacher.utils.Email
 import doobie.implicits._
 import cats.implicits._
+import ru.skelantros.easymacher.doobieimpl.DoobieLogging
 
-object UserQueries {
+object UserQueries extends DoobieLogging {
   case class Note(user_id: Int, email: String, username: String, activate_token: String, is_activated: Boolean,
                   passw: String, first_name: Option[String], last_name: Option[String], is_admin: Boolean) {
     def toUser: User =

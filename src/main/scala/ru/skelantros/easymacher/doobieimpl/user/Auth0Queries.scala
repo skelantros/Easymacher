@@ -6,12 +6,11 @@ import doobie.util.query.Query0
 import doobie.implicits._
 import doobie.util.log.LogHandler
 import doobie.util.update.Update0
+import ru.skelantros.easymacher.doobieimpl.DoobieLogging
 
 // TODO Отвратительный код, избавиться от него
-object Auth0Queries {
+object Auth0Queries extends DoobieLogging {
   import UserQueries._
-
-  implicit val han = LogHandler.jdkLogHandler
 
   case class Auth0Note(username: String, password: String, email: String, isAdmin: Boolean, token: String, isActivated: Boolean, auth0Sub: String)
 

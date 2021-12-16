@@ -3,10 +3,12 @@ package ru.skelantros.easymacher.doobieimpl.group
 import doobie.implicits._
 import cats.implicits._
 import doobie.free.connection.ConnectionIO
+import doobie.util.log.LogHandler
 import doobie.util.update.Update0
+import ru.skelantros.easymacher.doobieimpl.DoobieLogging
 import ru.skelantros.easymacher.entities.WordGroup.Desc
 
-object GroupQueries {
+object GroupQueries extends DoobieLogging {
   case class GroupNote(id: Int, ownerId: Int, name: String, isShared: Boolean) {
     def toDesc: Desc = Desc(id, ownerId, name, isShared)
   }

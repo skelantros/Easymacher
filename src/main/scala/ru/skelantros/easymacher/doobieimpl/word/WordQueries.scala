@@ -3,8 +3,9 @@ package ru.skelantros.easymacher.doobieimpl.word
 import doobie.free.connection.ConnectionIO
 import doobie.implicits._
 import doobie.util.update.Update0
+import ru.skelantros.easymacher.doobieimpl.DoobieLogging
 
-object WordQueries {
+object WordQueries extends DoobieLogging {
   case class BaseNote(id: Int, userId: Int, word: String, translate: Option[String], info: Option[String])
   private val allBaseFr =
     fr"""select word_id, user_id, word, w_translate, w_info
