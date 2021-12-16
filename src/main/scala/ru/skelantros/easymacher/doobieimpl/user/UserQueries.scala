@@ -45,7 +45,7 @@ object UserQueries extends DoobieLogging {
              email: Option[String], username: Option[String],
              firstName: Option[String], lastName: Option[String]): Update0 = {
     val fields1 =
-      (fr"email", email) :: (fr"username", username) ::
+      (fr"email", email.map(_.toLowerCase)) :: (fr"username", username.map(_.toLowerCase)) ::
         (fr"first_name", firstName) :: (fr"last_name", lastName) :: Nil
     val frs = fields1.collect {
       case (fr, Some(value)) => fr"$fr = $value"
@@ -57,7 +57,7 @@ object UserQueries extends DoobieLogging {
 
   def create(username: String, passw: String, email: String, isAdmin: Boolean, token: String): Update0 =
     sql"""insert into users(username, passw, email, is_admin, activate_token, is_activated)
-          values ($username, $passw, $email, $isAdmin, $token, false)"""
+          values (${username.toLowerCase}, $passw, ${email.toLowerCase}, $isAdmin, $token, false)"""
     .update
 
   def activate(token: String): Update0 =

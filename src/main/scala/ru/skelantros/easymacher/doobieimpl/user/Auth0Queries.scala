@@ -12,7 +12,7 @@ import ru.skelantros.easymacher.doobieimpl.DoobieLogging
 object Auth0Queries extends DoobieLogging {
   import UserQueries._
 
-  case class Auth0Note(username: String, password: String, email: String, isAdmin: Boolean, token: String, isActivated: Boolean, auth0Sub: String)
+  case class Auth0Note(id: Int, username: String, password: String, email: String, isAdmin: Boolean, token: String, isActivated: Boolean, auth0Sub: String)
 
   def findByAuth0Sub(auth0Sub: String): Query0[Note] =
     sql"$selectAllFr where auth0_sub = $auth0Sub".query[Note]

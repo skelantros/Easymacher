@@ -30,7 +30,7 @@ class UserServices[F[_] : Concurrent] {
     }
 
   private def updateUserInfo(user: User, updInfo: UpdInfo)(implicit db: Update[F]): F[Response[F]] = {
-    val UpdInfo(emailOpt, username, firstName, lastName) = updInfo
+    val UpdInfo(emailOpt, username, firstName, lastName) = updInfo.insensitive
     emailOpt match {
       case None => processDbDef(db.updateInfo(user.id, firstName, lastName, username, None))(userLight)
       case Some(emStr) => Email(emStr).fold(
@@ -160,7 +160,9 @@ object UserServices {
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, UpdPassword] = jsonOf
   }
 
-  case class UpdInfo(email: Option[String], username: Option[String], firstName: Option[String], lastName: Option[String])
+  case class UpdInfo(email: Option[String], username: Option[String], firstName: Option[String], lastName: Option[String]) {
+    def insensitive: UpdInfo = UpdInfo(email.map(_.toLowerCase), username.map(_.toLowerCase), firstName, lastName)
+  }
   object UpdInfo {
     implicit def encoder[F[_]]: EntityEncoder[F, UpdInfo] = dropJsonEnc
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, UpdInfo] = jsonOf
