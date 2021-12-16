@@ -144,10 +144,10 @@ object WordGroupServices {
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, JsonUpdate] = jsonOf
   }
 
-  case class JsonOut(id: Int, owner: Int, name: String)
+  case class JsonOut(id: Int, owner: Int, name: String, isShared: Boolean)
   object JsonOut {
     def apply(desc: WordGroup.Desc): JsonOut =
-      JsonOut(desc.id, desc.ownerId, desc.name)
+      JsonOut(desc.id, desc.ownerId, desc.name, desc.isShared)
 
     implicit def encoder[F[_]]: EntityEncoder[F, JsonOut] = dropJsonEnc
     implicit def seqEncoder[F[_]]: EntityEncoder[F, Seq[JsonOut]] = dropJsonEnc
