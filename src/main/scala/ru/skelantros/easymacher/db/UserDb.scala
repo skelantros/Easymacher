@@ -32,9 +32,8 @@ object UserDb {
       updateInfo(id, None, None, None, Some(email))
   }
 
-  trait AdminUpdate[F[_]] {
-    def updateRole(id: Int, role: Role): F[DbUnit]
-    def deleteUser(id: Int): F[DbUnit]
+  trait Remove[F[_]] {
+    def removeUser(id: Int): F[DbUnit]
   }
 
   trait Register[F[_]] {

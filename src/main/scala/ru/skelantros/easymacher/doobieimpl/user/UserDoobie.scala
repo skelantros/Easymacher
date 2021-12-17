@@ -16,7 +16,8 @@ import cats.effect.kernel.Async
 import cats.effect.{MonadCancelThrow, Sync}
 import doobie.implicits.toConnectionIOOps
 
-class UserDoobie[F[_] : Async](implicit val xa: Transactor[F]) extends Select[F] with Update[F] with Register[F] {
+class UserDoobie[F[_] : Async](implicit val xa: Transactor[F])
+  extends Select[F] with Update[F] with Register[F] with Remove[F] {
   private val note = (n: Note) => n.toUser
   private def seq[W[_] : Monad]: W[Note] => W[User] = (n: W[Note]) => n.map(note)
 
@@ -69,4 +70,7 @@ class UserDoobie[F[_] : Async](implicit val xa: Transactor[F]) extends Select[F]
         case Some(user) => processSelect(activate(uuid).note)(_ => ())
       }
     } yield res
+
+  override def removeUser(id: Int): F[DbUnit] =
+    processUpdate(delete(id))
 }

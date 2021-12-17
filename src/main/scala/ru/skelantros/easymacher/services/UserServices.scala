@@ -133,6 +133,14 @@ class UserServices[F[_] : Concurrent] {
         resp <- editAction(dbUser, u)(updateUserInfo(_, body))
       } yield resp
   }
+
+  def removeUser(u: User)(implicit dbSel: Select[F], dbRem: Remove[F]): HttpRoutes[F] = HttpRoutes.of[F] {
+    case POST -> Root / "user" / IntVar(id) / "remove" =>
+      for {
+        toRemoveDb <- dbSel.userById(id)
+        resp <- editAction(toRemoveDb, u)(toRemove => processDbDef(dbRem.removeUser(toRemove.id))(identity))
+      } yield resp
+  }
 }
 
 object UserServices {

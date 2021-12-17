@@ -62,4 +62,7 @@ object UserQueries extends DoobieLogging {
 
   def activate(token: String): Update0 =
     sql"update users set is_activated = true where activate_token = $token".update
+
+  def delete(id: Int): Update0 =
+    sql"delete from users where user_id = $id".update
 }

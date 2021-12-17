@@ -40,6 +40,7 @@ object Auth0Main extends IOApp {
     userServices.updateServices(_),
     userServices.editUser(_),
     userServices.currentUser(_),
+    userServices.removeUser(_),
     wordServices.selectUserServices,
     wordServices.addWord(_),
     wordServices.removeServices,
