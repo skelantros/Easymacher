@@ -38,8 +38,12 @@ object Auth0Main extends IOApp {
 
   val authIdServices: UserRoutes[IO] = AuthLifter(
     userServices.updateServices(_),
+    userServices.editUser(_),
+    userServices.currentUser(_),
+    userServices.removeUser(_),
     wordServices.selectUserServices,
     wordServices.addWord(_),
+    wordServices.removeServices,
     groupServices.allServices,
     flashServices.allServices
   )

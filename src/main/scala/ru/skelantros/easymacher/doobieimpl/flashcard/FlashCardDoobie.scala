@@ -62,7 +62,7 @@ class FlashCardDoobie[F[_] : Async](implicit val xa: Transactor[F],
   }
 
   override def createFlashCards(userId: Int, name: String, isShared: Boolean): F[DbUnit] =
-    processInsert(insertCards(userId, name, isShared))
+    processUpdate(insertCards(userId, name, isShared))
 
   override def addWordsByIds(id: Int, wordsSeq: Seq[Int]): F[DbUnit] = {
     val singleQuery = (wordId: Int) => insertFC2W(id, wordId).run.void.attemptSomeSqlState {
@@ -89,5 +89,5 @@ class FlashCardDoobie[F[_] : Async](implicit val xa: Transactor[F],
   }
 
   override def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbUnit] =
-    processInsert(updateCards(id, name, isShared))
+    processUpdate(updateCards(id, name, isShared))
 }

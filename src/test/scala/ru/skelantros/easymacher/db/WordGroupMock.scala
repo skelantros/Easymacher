@@ -22,6 +22,11 @@ class WordGroupMock[F[_] : Monad](init: Seq[WordGroup],
   override def descById(id: Int): F[DbResult[WordGroup.Desc]] =
     groupWithWordsById(id).map(_.map(Desc(_)))
 
+  override def descsByOwner(ownerId: Int): F[DbResult[Seq[Desc]]] =
+    DbResult.of(groups.toSeq.collect {
+      case g if g.ownerId == ownerId => Desc(g)
+    }).pure[F]
+
   override def allGroups: F[DbResult[Seq[WordGroup]]] = DbResult.of(groups.toSeq).pure[F]
 
   override def groupWithWordsById(id: Int): F[DbResult[WordGroup]] =
@@ -30,10 +35,14 @@ class WordGroupMock[F[_] : Monad](init: Seq[WordGroup],
       case None => DbResult.mistake[WordGroup](StatusMessages.noGroupById(id)).pure[F]
     }
 
-  override def createGroup(userId: Int, name: String, isShared: Boolean): F[DbUnit] =
+  override def createGroup(userId: Int, name: String, isShared: Boolean): F[DbResult[Desc]] =
     for {
       userRes <- userDb.userById(userId)
-    } yield userRes.map { u => groups += WordGroup(nextId, u, name, isShared, Seq()) }
+    } yield userRes.map { u =>
+      val group = WordGroup(nextId, u, name, isShared, Seq())
+      groups += group
+      WordGroup.Desc(group)
+    }
 
   override def addWordsByIds(id: Int, wordsIds: Seq[Int]): F[DbUnit] =
     for {
@@ -51,7 +60,7 @@ class WordGroupMock[F[_] : Monad](init: Seq[WordGroup],
       }
     } yield res
 
-  override def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbUnit] =
+  override def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbResult[Desc]] =
     for {
       groupRes <- groupWithWordsById(id)
       res = groupRes.map { g =>
@@ -59,6 +68,13 @@ class WordGroupMock[F[_] : Monad](init: Seq[WordGroup],
         val newName = name.getOrElse(g.name)
         val newShared = isShared.getOrElse(g.isShared)
         groups(idxOf) = g.copy(isShared = newShared, name = newName)
+        WordGroup.Desc(groups(idxOf))
       }
     } yield res
+
+  override def remove(id: Int): F[DbUnit] = {
+    val idx = groups.indexWhere(_.id == id)
+    if(idx != -1) groups.remove(idx)
+    DbResult.unit.pure[F]
+  }
 }

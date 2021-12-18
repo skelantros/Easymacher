@@ -8,12 +8,14 @@ object StatusMessages {
   def noUserByUsername(username: String): String = s"User with username '$username' does not exist."
   def noUserByEmail(email: Email): String = s"User with email '${email.asString}' does not exist."
   def noUserByToken(token: String): String = s"Invalid token '$token'."
+  def cannotEditUser(id: Int) = s"You cannot edit/remove user with id $id."
 
   def userByUsernameExists(username: String): String = s"User with username '$username' already exists."
   def userByEmailExists(email: Email): String = s"User with email '${email.asString}' already exists."
   def userAlreadyActivated(token: String): String = s"User with token '$token' has been already activated."
 
   def noWordById(id: Int): String = s"Word with id $id does not exist."
+  def cannotRemoveWord(id: Int): String = s"You cannot remove word with id $id."
 
   def noAccessToGroup(id: Int): String = s"You do not have access to word group with id $id."
   def cannotEditGroup(id: Int): String = s"You cannot edit the word group with id $id."

@@ -18,23 +18,22 @@ object UserDb {
   }
 
   trait Update[F[_]] {
-    def updatePassword(id: Int, oldPassword: String, newPassword: String): F[DbUnit]
+    def updatePassword(id: Int, oldPassword: String, newPassword: String): F[DbResult[User]]
     def updateInfo(id: Int, firstName: Option[String], lastName: Option[String],
-                   username: Option[String], email: Option[Email]): F[DbUnit]
+                   username: Option[String], email: Option[Email]): F[DbResult[User]]
 
-    def updateFirstName(id: Int, firstName: String): F[DbUnit] =
+    def updateFirstName(id: Int, firstName: String): F[DbResult[User]] =
       updateInfo(id, Some(firstName), None, None, None)
-    def updateLastName(id: Int, lastName: String): F[DbUnit] =
+    def updateLastName(id: Int, lastName: String): F[DbResult[User]] =
       updateInfo(id, None, Some(lastName), None, None)
-    def updateUsername(id: Int, username: String): F[DbUnit] =
+    def updateUsername(id: Int, username: String): F[DbResult[User]] =
       updateInfo(id, None, None, Some(username), None)
-    def updateEmail(id: Int, email: Email): F[DbUnit] =
+    def updateEmail(id: Int, email: Email): F[DbResult[User]] =
       updateInfo(id, None, None, None, Some(email))
   }
 
-  trait AdminUpdate[F[_]] {
-    def updateRole(id: Int, role: Role): F[DbUnit]
-    def deleteUser(id: Int): F[DbUnit]
+  trait Remove[F[_]] {
+    def removeUser(id: Int): F[DbUnit]
   }
 
   trait Register[F[_]] {

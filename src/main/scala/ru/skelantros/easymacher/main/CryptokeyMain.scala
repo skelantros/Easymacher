@@ -43,8 +43,10 @@ object CryptokeyMain extends IOApp {
 
   val authIdServices: UserRoutes[IO] = AuthLifter(
     userServices.updateServices(_),
+    userServices.currentUser(_),
     wordServices.selectUserServices,
     wordServices.addWord(_),
+    wordServices.removeServices,
     groupServices.allServices,
     flashServices.allServices
   )

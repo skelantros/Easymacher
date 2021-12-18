@@ -5,8 +5,9 @@ import ru.skelantros.easymacher.entities.{Role, User}
 import ru.skelantros.easymacher.utils.Email
 import doobie.implicits._
 import cats.implicits._
+import ru.skelantros.easymacher.doobieimpl.DoobieLogging
 
-object UserQueries {
+object UserQueries extends DoobieLogging {
   case class Note(user_id: Int, email: String, username: String, activate_token: String, is_activated: Boolean,
                   passw: String, first_name: Option[String], last_name: Option[String], is_admin: Boolean) {
     def toUser: User =
@@ -44,7 +45,7 @@ object UserQueries {
              email: Option[String], username: Option[String],
              firstName: Option[String], lastName: Option[String]): Update0 = {
     val fields1 =
-      (fr"email", email) :: (fr"username", username) ::
+      (fr"email", email.map(_.toLowerCase)) :: (fr"username", username.map(_.toLowerCase)) ::
         (fr"first_name", firstName) :: (fr"last_name", lastName) :: Nil
     val frs = fields1.collect {
       case (fr, Some(value)) => fr"$fr = $value"
@@ -56,9 +57,12 @@ object UserQueries {
 
   def create(username: String, passw: String, email: String, isAdmin: Boolean, token: String): Update0 =
     sql"""insert into users(username, passw, email, is_admin, activate_token, is_activated)
-          values ($username, $passw, $email, $isAdmin, $token, false)"""
+          values (${username.toLowerCase}, $passw, ${email.toLowerCase}, $isAdmin, $token, false)"""
     .update
 
   def activate(token: String): Update0 =
     sql"update users set is_activated = true where activate_token = $token".update
+
+  def delete(id: Int): Update0 =
+    sql"delete from users where user_id = $id".update
 }

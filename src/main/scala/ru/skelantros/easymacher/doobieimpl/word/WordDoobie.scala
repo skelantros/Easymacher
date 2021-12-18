@@ -10,9 +10,11 @@ import ru.skelantros.easymacher.entities.{AnyWord, Noun, Word}
 import cats.implicits._
 import doobie.free.connection.ConnectionIO
 import doobie.implicits._
+import ru.skelantros.easymacher.doobieimpl.flashcard.FlashCardQueries
+import ru.skelantros.easymacher.doobieimpl.group.GroupQueries
 
 class WordDoobie[F[_] : Async](implicit xa: Transactor[F], userDb: UserDb.Select[F])
-  extends Select[F] with AddAny[F] with AddNoun[F] {
+  extends Select[F] with AddAny[F] with AddNoun[F] with Remove[F] {
 
   // временное решение, связанное с тем, что на самом деле сначала прогружаются просто слова, а потом - существительные
   // TODO реализовать запросы так, чтобы не приходилось проводить эту сортировку!
@@ -68,25 +70,34 @@ class WordDoobie[F[_] : Async](implicit xa: Transactor[F], userDb: UserDb.Select
     }
   }
 
-  override def addWord(word: String, translate: Option[String], userId: Int): F[DbUnit] = {
-    val query = insertBase(userId, word, translate, None, false)
+  override def addWord(word: String, translate: Option[String], userId: Int): F[DbResult[Word]] = {
+    val query = insertBase(userId, word, translate, None, false).baseNote
 
-    query.run.attempt.transact(xa).map {
-      case Right(_) => DbResult.unit
-      case Left(t) => DbResult.thr(t)
+    query.attempt.transact(xa).flatMap {
+      case Right(base) => wordById(base.id)
+      case Left(t) => DbResult.thr[Word](t).pure[F]
     }
   }
 
-  override def addNoun(word: String, translate: Option[String], gender: Noun.Gender, plural: Option[String], userId: Int): F[DbUnit] = {
+  override def addNoun(word: String, translate: Option[String], gender: Noun.Gender, plural: Option[String], userId: Int): F[DbResult[Word]] = {
     val query = for {
       base <- insertBase(userId, word, translate, None, true).baseNote
       wordId = base.id
       noun <- insertNoun(wordId, plural, DbGender(gender)).run
-    } yield ()
+    } yield base
+
+    query.attempt.transact(xa).flatMap {
+      case Right(base) => wordById(base.id)
+      case Left(t) => DbResult.thr[Word](t).pure[F]
+    }
+  }
+
+  override def removeById(id: Int): F[DbUnit] = {
+    val query = deleteBase(id).update.run.void
 
     query.attempt.transact(xa).map {
       case Right(()) => DbResult.unit
-      case Left(t) => DbResult.thr(t)
+      case Left(t) => DbUnit.thr(t)
     }
   }
 }

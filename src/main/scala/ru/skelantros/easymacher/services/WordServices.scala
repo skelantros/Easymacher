@@ -7,9 +7,10 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.circe._
 import io.circe.generic.auto._
 import cats.implicits._
-import ru.skelantros.easymacher.db.DbResult
+import ru.skelantros.easymacher.db.{DbResult, DbUnit}
 import ru.skelantros.easymacher.db.WordDb._
-import ru.skelantros.easymacher.entities.{AnyWord, Noun, User, Word}
+import ru.skelantros.easymacher.entities.{AnyWord, Noun, Role, User, Word}
+import ru.skelantros.easymacher.utils.StatusMessages
 import ru.skelantros.easymacher.utils.StatusMessages._
 
 //noinspection TypeAnnotation
@@ -18,10 +19,18 @@ class WordServices[F[_] : Concurrent] {
   import dsl._
   import WordServices._
 
+  private def canDelete(user: User, word: Word): Boolean = {
+    if(word.owner.id == user.id) true
+    else if(user.role == Role.Admin) true
+    else false
+  }
+
   def selectServices(implicit db: Select[F]) =
     all <+> byId
   def selectUserServices(implicit db: Select[F]): User => HttpRoutes[F] =
     (u: User) => ofUser(u) <+> ofUserById(u)
+  def removeServices(implicit db: Select[F] with Remove[F]): User => HttpRoutes[F] =
+    removeWord(_)
 
   def all(implicit db: Select[F]) = HttpRoutes.of[F] {
     case GET -> Root / "all-words" =>
@@ -52,10 +61,21 @@ class WordServices[F[_] : Concurrent] {
         lazy val dbReq = jsonInp.genderOpt match {
           case Some(g) => db.addNoun(word, translate, g, plural, user)
           case None if !typ.map(_.toLowerCase).contains("noun") => db.addWord(word, translate, user)
-          case _ => DbResult.mistake[Unit](noGenderNoun).pure[F]
+          case _ => DbResult.mistake[Word](noGenderNoun).pure[F]
         }
-        processDbDef(dbReq)(identity)
+        processDbDef(dbReq)(JsonOut.fromWord)
       }
+  }
+  def removeWord(user: User)(implicit db: Select[F] with Remove[F]) = HttpRoutes.of[F] {
+    case POST -> Root / "word" / IntVar(id) / "remove" =>
+      for {
+        wordDb <- db.wordById(id)
+        dbReq = wordDb.map { w =>
+          if(canDelete(user, w)) db.removeById(id)
+          else DbUnit.mistake(StatusMessages.cannotRemoveWord(id)).pure[F]
+        }.sequence
+        resp <- processDbDef(dbReq)(_ => ())
+      } yield resp
   }
 }
 

@@ -6,14 +6,13 @@ import doobie.util.query.Query0
 import doobie.implicits._
 import doobie.util.log.LogHandler
 import doobie.util.update.Update0
+import ru.skelantros.easymacher.doobieimpl.DoobieLogging
 
 // TODO Отвратительный код, избавиться от него
-object Auth0Queries {
+object Auth0Queries extends DoobieLogging {
   import UserQueries._
 
-  implicit val han = LogHandler.jdkLogHandler
-
-  case class Auth0Note(username: String, password: String, email: String, isAdmin: Boolean, token: String, isActivated: Boolean, auth0Sub: String)
+  case class Auth0Note(id: Int, username: String, password: String, email: String, isAdmin: Boolean, token: String, isActivated: Boolean, auth0Sub: String)
 
   def findByAuth0Sub(auth0Sub: String): Query0[Note] =
     sql"$selectAllFr where auth0_sub = $auth0Sub".query[Note]

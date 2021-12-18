@@ -3,8 +3,9 @@ package ru.skelantros.easymacher.doobieimpl.word
 import doobie.free.connection.ConnectionIO
 import doobie.implicits._
 import doobie.util.update.Update0
+import ru.skelantros.easymacher.doobieimpl.DoobieLogging
 
-object WordQueries {
+object WordQueries extends DoobieLogging {
   case class BaseNote(id: Int, userId: Int, word: String, translate: Option[String], info: Option[String])
   private val allBaseFr =
     fr"""select word_id, user_id, word, w_translate, w_info
@@ -43,4 +44,9 @@ object WordQueries {
     def baseNote: ConnectionIO[BaseNote] =
       update.withUniqueGeneratedKeys[BaseNote]("word_id", "user_id", "word", "w_translate", "w_info")
   }
+
+  def deleteBase(wordId: Int) =
+    sql"delete from words_base where word_id = $wordId"
+  def deleteNoun(wordId: Int) =
+    sql"delete from words_nouns where word_id = $wordId"
 }

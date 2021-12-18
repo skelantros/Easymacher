@@ -3,8 +3,9 @@ package ru.skelantros.easymacher.doobieimpl.flashcard
 import ru.skelantros.easymacher.entities.FlashCards.{FlashDesc => Desc}
 import doobie.implicits._
 import doobie.util.update.Update0
+import ru.skelantros.easymacher.doobieimpl.DoobieLogging
 
-object FlashCardQueries {
+object FlashCardQueries extends DoobieLogging {
   case class FCNote(id: Int, ownerId: Int, name: String, isShared: Boolean) {
     def toDesc: Desc = Desc(id, name, ownerId, isShared)
   }
@@ -34,4 +35,7 @@ object FlashCardQueries {
     sql"$groupToWordSelectFr where cards_id = $cardsId".query[FC2WNote]
   def insertFC2W(cardsId: Int, wordId: Int) =
     sql"insert into flash_cards_to_words(cards_id, word_id) values ($cardsId, $wordId)".update
+
+  def deleteAllByWordId(wordId: Int) =
+    sql"delete from flash_cards_to_words where word_id = $wordId"
 }

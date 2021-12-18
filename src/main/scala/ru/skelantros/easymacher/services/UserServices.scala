@@ -2,19 +2,42 @@ package ru.skelantros.easymacher.services
 
 import cats.Monad
 import cats.effect.Concurrent
-import org.http4s.{EntityDecoder, EntityEncoder, HttpRoutes}
+import org.http4s.{EntityDecoder, EntityEncoder, HttpRoutes, Response}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.circe._
 import io.circe.generic.auto._
 import cats.implicits._
+import com.oracle.deploy.update.UpdateInfo
+import ru.skelantros.easymacher.db.DbResult
 import ru.skelantros.easymacher.db.UserDb._
 import ru.skelantros.easymacher.entities.{Role, User}
-import ru.skelantros.easymacher.utils.Email
+import ru.skelantros.easymacher.utils.{Email, StatusMessages}
 
 class UserServices[F[_] : Concurrent] {
   val dsl = new Http4sDsl[F] {}
   import dsl._
   import UserServices._
+
+  private def editAction(dbUser: DbResult[User], u: User)
+                        (ifAccess: User => F[Response[F]]): F[Response[F]] =
+    dbUser match {
+      case Right(user) if user.id == u.id || u.role == Role.Admin =>
+        ifAccess(user)
+      case Right(user) =>
+        Forbidden(StatusMessages.cannotEditUser(user.id))
+      case Left(error) =>
+        responseWithError[F](error)
+    }
+
+  private def updateUserInfo(user: User, updInfo: UpdInfo)(implicit db: Update[F]): F[Response[F]] = {
+    val UpdInfo(emailOpt, username, firstName, lastName) = updInfo.insensitive
+    emailOpt match {
+      case None => processDbDef(db.updateInfo(user.id, firstName, lastName, username, None))(userLight)
+      case Some(emStr) => Email(emStr).fold(
+        BadRequest("Incorrect email")
+      )(email => processDbDef(db.updateInfo(user.id, firstName, lastName, username, Some(email)))(userLight))
+    }
+  }
 
   private implicit val lightEncoder: EntityEncoder[F, UserLight] = dropJsonEnc
   private implicit val seqLightEncoder: EntityEncoder[F, Seq[UserLight]] = dropJsonEnc
@@ -70,26 +93,22 @@ class UserServices[F[_] : Concurrent] {
       )(em => processDbDef(db.userByEmail(em))(userLight))
   }
 
+  def currentUser(user: User)(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
+    case GET -> Root / "profile" =>
+      Ok(userLight(user))
+  }
+
   def updatePassword(user: User)(implicit db: Update[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "update-password" =>
       val body = req.as[UpdPassword]
       body.flatMap { updPass =>
-        processDbDef(db.updatePassword(user.id, updPass.old, updPass.`new`))(identity)
+        processDbDef(db.updatePassword(user.id, updPass.old, updPass.`new`))(userLight)
       }
   }
 
   def updateInfo(user: User)(implicit db: Update[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "update-info" =>
-      val body = req.as[UpdInfo]
-      body.flatMap { updInfo =>
-        val UpdInfo(emailOpt, username, firstName, lastName) = updInfo
-        emailOpt match {
-          case None => processDbDef(db.updateInfo(user.id, firstName, lastName, username, None))(identity)
-          case Some(emStr) => Email(emStr).fold(
-            BadRequest("Incorrect email")
-          )(email => processDbDef(db.updateInfo(user.id, firstName, lastName, username, Some(email)))(identity))
-        }
-      }
+      req.as[UpdInfo].flatMap(updateUserInfo(user, _))
   }
 
   def createUser(implicit db: Register[F]): HttpRoutes[F] = HttpRoutes.of[F] {
@@ -104,6 +123,23 @@ class UserServices[F[_] : Concurrent] {
   def activateUser(implicit db: Register[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case POST -> Root / "activate" :? ActivateTokenParam(token) =>
       processDbDef(db.activateUser(token))(identity)
+  }
+
+  def editUser(u: User)(implicit dbSel: Select[F], dbUpd: Update[F]): HttpRoutes[F] = HttpRoutes.of[F] {
+    case req @ POST -> Root / "user" / IntVar(id) / "edit" =>
+      for {
+        body <- req.as[UpdInfo]
+        dbUser <- dbSel.userById(id)
+        resp <- editAction(dbUser, u)(updateUserInfo(_, body))
+      } yield resp
+  }
+
+  def removeUser(u: User)(implicit dbSel: Select[F], dbRem: Remove[F]): HttpRoutes[F] = HttpRoutes.of[F] {
+    case POST -> Root / "user" / IntVar(id) / "remove" =>
+      for {
+        toRemoveDb <- dbSel.userById(id)
+        resp <- editAction(toRemoveDb, u)(toRemove => processDbDef(dbRem.removeUser(toRemove.id))(identity))
+      } yield resp
   }
 }
 
@@ -132,7 +168,9 @@ object UserServices {
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, UpdPassword] = jsonOf
   }
 
-  case class UpdInfo(email: Option[String], username: Option[String], firstName: Option[String], lastName: Option[String])
+  case class UpdInfo(email: Option[String], username: Option[String], firstName: Option[String], lastName: Option[String]) {
+    def insensitive: UpdInfo = UpdInfo(email.map(_.toLowerCase), username.map(_.toLowerCase), firstName, lastName)
+  }
   object UpdInfo {
     implicit def encoder[F[_]]: EntityEncoder[F, UpdInfo] = dropJsonEnc
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, UpdInfo] = jsonOf

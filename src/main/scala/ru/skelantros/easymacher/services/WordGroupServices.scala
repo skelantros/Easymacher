@@ -39,12 +39,18 @@ class WordGroupServices[F[_] : Concurrent] {
         responseWithError[F](error)
     }
 
-  def allServices(implicit db: DescSelect[F], db2: Select[F], db3: Update[F]): User => HttpRoutes[F] =
-    u => allVisible(u) <+> byIdVisible(u) <+> wordsOfGroup(u) <+> create(u) <+> addWords(u) <+> update(u)
+  def allServices(implicit db: DescSelect[F], db2: Select[F], db3: Update[F], db4: RewriteWords[F]): User => HttpRoutes[F] =
+    u => allVisible(u) <+> byIdVisible(u) <+> byUserIdVisible(u) <+> wordsOfGroup(u) <+>
+      create(u) <+> addWords(u) <+> update(u) <+> remove(u) <+> rewrite(u)
 
   def allVisible(u: User)(implicit db: DescSelect[F]) = HttpRoutes.of[F] {
     case GET -> Root / "word-groups" =>
       processDbDef(db.allDescs)(_.filter(_.isVisibleTo(u)).map(JsonOut(_)))
+  }
+
+  def byUserIdVisible(u: User)(implicit db: DescSelect[F]) = HttpRoutes.of[F] {
+    case GET -> Root / "user" / IntVar(id) / "word-groups" =>
+      processDbDef(db.descsByOwner(id))(_.filter(_.isVisibleTo(u)).map(JsonOut(_)))
   }
 
   def byIdVisible(u: User)(implicit db: DescSelect[F]) = HttpRoutes.of[F] {
@@ -75,7 +81,7 @@ class WordGroupServices[F[_] : Concurrent] {
       for {
         json <- req.as[JsonCreate]
         JsonCreate(name, isShared) = json
-        resp <- processDbDef(db.createGroup(u, name, isShared))(identity)
+        resp <- processDbDef(db.createGroup(u, name, isShared))(JsonOut(_))
       } yield resp
   }
 
@@ -98,7 +104,26 @@ class WordGroupServices[F[_] : Concurrent] {
         json <- req.as[JsonUpdate]
         JsonUpdate(isShared, name) = json
 
-        resp <- editAction(descDb, u)(d => processDbDef(dbUpd.update(d.id, name, isShared))(identity))
+        resp <- editAction(descDb, u)(d => processDbDef(dbUpd.update(d.id, name, isShared))(JsonOut(_)))
+      } yield resp
+  }
+
+  def remove(u: User)(implicit dbSel: DescSelect[F], dbUpd: Update[F]) = HttpRoutes.of[F] {
+    case POST -> Root / "word-groups" / IntVar(id) / "remove" =>
+      for {
+        descDb <- dbSel.descById(id)
+        resp <- editAction(descDb, u)(d => processDbDef(dbUpd.remove(d.id))(identity))
+      } yield resp
+  }
+
+  def rewrite(u: User)(implicit dbSel: DescSelect[F], db: RewriteWords[F]) = HttpRoutes.of[F] {
+    case req @ POST -> Root / "word-groups" / IntVar(id) / "rewrite-words" =>
+      for {
+        descDb <- dbSel.descById(id)
+        json <- req.as[JsonAddWords]
+        words = json.words
+
+        resp <- editAction(descDb, u)(d => processDbDef(db.rewriteWordsByIds(d.id, words))(identity))
       } yield resp
   }
 }
@@ -119,10 +144,10 @@ object WordGroupServices {
     implicit def decoder[F[_] : Concurrent]: EntityDecoder[F, JsonUpdate] = jsonOf
   }
 
-  case class JsonOut(id: Int, owner: Int, name: String)
+  case class JsonOut(id: Int, owner: Int, name: String, isShared: Boolean)
   object JsonOut {
     def apply(desc: WordGroup.Desc): JsonOut =
-      JsonOut(desc.id, desc.ownerId, desc.name)
+      JsonOut(desc.id, desc.ownerId, desc.name, desc.isShared)
 
     implicit def encoder[F[_]]: EntityEncoder[F, JsonOut] = dropJsonEnc
     implicit def seqEncoder[F[_]]: EntityEncoder[F, Seq[JsonOut]] = dropJsonEnc

@@ -18,6 +18,7 @@ object WordGroupDb {
   trait DescSelect[F[_]] {
     def allDescs: F[DbResult[Seq[Desc]]]
     def descById(id: Int): F[DbResult[Desc]]
+    def descsByOwner(ownerId: Int): F[DbResult[Seq[Desc]]]
   }
 
   trait Select[F[_]] {
@@ -26,10 +27,16 @@ object WordGroupDb {
   }
 
   trait Update[F[_]] {
-    def createGroup(userId: Int, name: String, isShared: Boolean): F[DbUnit]
-    def createGroup(user: User, name: String, isShared: Boolean): F[DbUnit] = createGroup(user.id, name, isShared)
+    def createGroup(userId: Int, name: String, isShared: Boolean): F[DbResult[Desc]]
+    def createGroup(user: User, name: String, isShared: Boolean): F[DbResult[Desc]] = createGroup(user.id, name, isShared)
     def addWordsByIds(id: Int, wordsIds: Seq[Int]): F[DbUnit]
     def addWords(id: Int, words: Seq[Word]): F[DbUnit] = addWordsByIds(id, words.map(_.id))
-    def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbUnit]
+    def update(id: Int, name: Option[String], isShared: Option[Boolean]): F[DbResult[Desc]]
+    def remove(id: Int): F[DbUnit]
+  }
+
+  trait RewriteWords[F[_]] {
+    def rewriteWords(id: Int, newWords: Seq[Word]): F[DbUnit] = rewriteWordsByIds(id, newWords.map(_.id))
+    def rewriteWordsByIds(id: Int, newWords: Seq[Int]): F[DbUnit]
   }
 }
