@@ -60,7 +60,7 @@ class UserMock[F[_] : Monad](val init: Seq[User])
       case Some((user, idx)) =>
         val password = user.password
         if(password == oldPassword) {
-          db(idx) = user.copy(password = newPassword)
+          db(idx) = user.copy()
           DbResult.unit
         } else DbResult.mistake("Wrong password.")
       case None => DbResult.mistake(s"User with id $id does not exist.")
@@ -81,7 +81,7 @@ class UserMock[F[_] : Monad](val init: Seq[User])
           val emCh: DbResult[User] = usCh.flatMap { user =>
             email.map { em =>
               if(db.map(_.email).contains(em)) DbResult.mistake[User](s"User with email '$em' already exists.")
-              else DbResult.of[User](lnCh.copy(email = em))
+              else DbResult.of[User](lnCh.copy())
             }.getOrElse(DbResult.of(user))
           }
           emCh.foreach(db(idx) = _)
@@ -111,7 +111,7 @@ class UserMock[F[_] : Monad](val init: Seq[User])
       DbResult.mistake(s"Invalid password.")
     else {
       val id = db.map(_.id).max + 1
-      db += User(id, username, email, password, Role.User, false, s"00$id", None, None)
+      db += User(id, username, Role.User, None, None)
       DbResult.unit
     }
   }
@@ -121,7 +121,7 @@ class UserMock[F[_] : Monad](val init: Seq[User])
       DbResult.mistake[Unit]("Wrong token.")
     ) {
       case (user, idx) =>
-        db(idx) = user.copy(isActivated = true)
+        db(idx) = user.copy()
         DbResult.unit
     }
   }

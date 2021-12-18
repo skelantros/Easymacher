@@ -1,13 +1,11 @@
 package ru.skelantros.easymacher.services
 
-import cats.Monad
 import cats.effect.Concurrent
 import org.http4s.{EntityDecoder, EntityEncoder, HttpRoutes, Response}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.circe._
 import io.circe.generic.auto._
 import cats.implicits._
-import com.oracle.deploy.update.UpdateInfo
 import ru.skelantros.easymacher.db.DbResult
 import ru.skelantros.easymacher.db.UserDb._
 import ru.skelantros.easymacher.entities.{Role, User}
@@ -44,11 +42,9 @@ class UserServices[F[_] : Concurrent] {
   private implicit val optLightEncoder: EntityEncoder[F, Option[UserLight]] = dropJsonEnc
 
   def selectServices(implicit db: Select[F]): HttpRoutes[F] =
-    all <+> allByRole <+> byId <+> byUsername <+> byEmail
+    all <+> allByRole <+> byId
   def updateServices(user: User)(implicit db: Update[F]): HttpRoutes[F] =
-    updatePassword(user) <+> updateInfo(user)
-  def registerServices(implicit db: Register[F]): HttpRoutes[F] =
-    createUser <+> activateUser
+    updateInfo(user)
   def selectOffsetServices(implicit db: SelectOffset[F]): HttpRoutes[F] =
     allOffset <+> allByRoleOffset
 
@@ -81,48 +77,14 @@ class UserServices[F[_] : Concurrent] {
       processDbDef(db.userById(id))(userLight)
   }
 
-  def byUsername(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root / "user" :? UsernameParam(username) =>
-      processDbDef(db.userByUsername(username))(userLight)
-  }
-
-  def byEmail(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root / "user" :? EmailParam(email) =>
-      Email(email).fold(
-        BadRequest("Incorrect email")
-      )(em => processDbDef(db.userByEmail(em))(userLight))
-  }
-
   def currentUser(user: User)(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case GET -> Root / "profile" =>
       Ok(userLight(user))
   }
 
-  def updatePassword(user: User)(implicit db: Update[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case req @ POST -> Root / "update-password" =>
-      val body = req.as[UpdPassword]
-      body.flatMap { updPass =>
-        processDbDef(db.updatePassword(user.id, updPass.old, updPass.`new`))(userLight)
-      }
-  }
-
   def updateInfo(user: User)(implicit db: Update[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "update-info" =>
       req.as[UpdInfo].flatMap(updateUserInfo(user, _))
-  }
-
-  def createUser(implicit db: Register[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case req @ POST -> Root / "register" =>
-      val body = req.as[CreateUser]
-      body.flatMap {
-        case CreateUser(username, password, email) =>
-          processDbEmail(email, db.createUser(username, password, _, Role.User))(identity)
-      }
-  }
-
-  def activateUser(implicit db: Register[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case POST -> Root / "activate" :? ActivateTokenParam(token) =>
-      processDbDef(db.activateUser(token))(identity)
   }
 
   def editUser(u: User)(implicit dbSel: Select[F], dbUpd: Update[F]): HttpRoutes[F] = HttpRoutes.of[F] {

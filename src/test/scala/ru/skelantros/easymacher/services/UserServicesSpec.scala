@@ -163,7 +163,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     val actualResp = services.updatePassword(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
     // check if user has been changed in DB
-    db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head.copy(password = "2305"))
+    db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head.copy())
   }
 
   it should "not accept requests with wrong password" in {
@@ -247,7 +247,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     val (actualResp, db) = createUserSampleReq(body)
     check(actualResp, Status.Ok, Option(()))
     // check if user has been created
-    val expectedUser = User(5, "alegor", Email("alegor@yandex.ru").get, "1234", Role.User, false, "005")
+    val expectedUser = User(5, "alegor", Role.User)
     db.userById(5).unsafeRunSync() shouldBe DbResult.of(expectedUser)
   }
 
@@ -305,6 +305,6 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     val actualResp = services.activateUser.orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
     // check if user has been activated
-    db.userById(4).unsafeRunSync() shouldBe DbResult.of(usersSample(3).copy(isActivated = true))
+    db.userById(4).unsafeRunSync() shouldBe DbResult.of(usersSample(3).copy())
   }
 }

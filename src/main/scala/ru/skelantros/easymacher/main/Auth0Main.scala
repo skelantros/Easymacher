@@ -4,10 +4,10 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.http4s.{HttpApp, HttpRoutes}
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.middleware.{CORS, CORSConfig, Logger}
-import ru.skelantros.easymacher.auth.{Auth0Auth, AuthLifter, CryptokeyAuth, UserRoutes}
+import ru.skelantros.easymacher.auth.{Auth0Auth, AuthLifter, UserRoutes}
 import ru.skelantros.easymacher.doobieimpl.flashcard.FlashCardDoobie
 import ru.skelantros.easymacher.doobieimpl.group.WordGroupDoobie
-import ru.skelantros.easymacher.doobieimpl.user.{Auth0Doobie, UserDoobie}
+import ru.skelantros.easymacher.doobieimpl.user.{UserDoobie}
 import ru.skelantros.easymacher.doobieimpl.word.WordDoobie
 import ru.skelantros.easymacher.services.{FlashCardServices, UserServices, WordGroupServices, WordServices}
 import ru.skelantros.easymacher.utils.TransactorImpl
@@ -22,7 +22,6 @@ object Auth0Main extends IOApp {
   implicit val wordsDb = new WordDoobie[IO]
   implicit val wordGroupsDb = new WordGroupDoobie[IO]
   implicit val flashDb = new FlashCardDoobie[IO]
-  implicit val authDb = new Auth0Doobie[IO]
 
   val userServices = new UserServices[IO]
   val wordServices = new WordServices[IO]

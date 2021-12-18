@@ -57,7 +57,7 @@ class Auth0Auth[F[_] : Async : Concurrent](config: Auth0Auth.Config)(implicit db
     for {
       userInfo <- getUserInfo(token)
       UserInfo(username, firstName, lastName) = userInfo
-      dbRes <- db.addAuth0User(sub, username, firstName, lastName)
+      dbRes <- db.addAuth0User(sub, username, firstName, lastName, isAdmin = false)
       result = dbRes match {
         case Right(u) => Right(u)
         case Left(Mistake(msg)) => Left(msg)
