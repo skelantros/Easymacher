@@ -9,7 +9,7 @@ import cats.implicits._
 import ru.skelantros.easymacher.db.DbResult
 import ru.skelantros.easymacher.db.UserDb._
 import ru.skelantros.easymacher.entities.{Role, User}
-import ru.skelantros.easymacher.utils.{Email, StatusMessages}
+import ru.skelantros.easymacher.utils.StatusMessages
 
 class UserServices[F[_] : Concurrent] {
   val dsl = new Http4sDsl[F] {}
@@ -29,12 +29,7 @@ class UserServices[F[_] : Concurrent] {
 
   private def updateUserInfo(user: User, updInfo: UpdInfo)(implicit db: Update[F]): F[Response[F]] = {
     val UpdInfo(emailOpt, username, firstName, lastName) = updInfo.insensitive
-    emailOpt match {
-      case None => processDbDef(db.updateInfo(user.id, firstName, lastName, username, None))(userLight)
-      case Some(emStr) => Email(emStr).fold(
-        BadRequest("Incorrect email")
-      )(email => processDbDef(db.updateInfo(user.id, firstName, lastName, username, Some(email)))(userLight))
-    }
+    processDbDef(db.updateInfo(user.id, firstName, lastName, username))(userLight)
   }
 
   private implicit val lightEncoder: EntityEncoder[F, UserLight] = dropJsonEnc

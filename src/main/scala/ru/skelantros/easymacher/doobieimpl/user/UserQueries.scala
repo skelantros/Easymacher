@@ -2,7 +2,6 @@ package ru.skelantros.easymacher.doobieimpl.user
 
 import doobie.{ConnectionIO, Update0}
 import ru.skelantros.easymacher.entities.{Role, User}
-import ru.skelantros.easymacher.utils.Email
 import doobie.implicits._
 import cats.implicits._
 import doobie.util.query.Query0
@@ -35,10 +34,9 @@ object UserQueries extends DoobieLogging {
 
   // Выбрасывает исключение, если пользователь ничего не обновляет (все поля - None)
   def update(id: Int,
-             email: Option[String], username: Option[String],
-             firstName: Option[String], lastName: Option[String]): Update0 = {
+             username: Option[String], firstName: Option[String], lastName: Option[String]): Update0 = {
     val fields1 =
-      (fr"email", email.map(_.toLowerCase)) :: (fr"username", username.map(_.toLowerCase)) ::
+      (fr"username", username.map(_.toLowerCase)) ::
         (fr"first_name", firstName) :: (fr"last_name", lastName) :: Nil
     val frs = fields1.collect {
       case (fr, Some(value)) => fr"$fr = $value"

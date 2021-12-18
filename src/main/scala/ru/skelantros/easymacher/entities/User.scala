@@ -1,6 +1,5 @@
 package ru.skelantros.easymacher.entities
 
-import ru.skelantros.easymacher.utils.Email
 import ru.skelantros.easymacher.utils.Types.OrThrowable
 
 // TODO провести рефакторинг: выделить общий трейт User, от него унаследовать реализации для auth0 и cryptokey

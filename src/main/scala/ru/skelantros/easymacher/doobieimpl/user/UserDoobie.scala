@@ -8,7 +8,6 @@ import doobie.util.transactor.Transactor
 import ru.skelantros.easymacher.db.{DbResult, DbUnit}
 import ru.skelantros.easymacher.db.UserDb._
 import ru.skelantros.easymacher.entities.{Role, User}
-import ru.skelantros.easymacher.utils.Email
 import ru.skelantros.easymacher.doobieimpl._
 import ru.skelantros.easymacher.utils.StatusMessages._
 import UserQueries._
@@ -25,10 +24,10 @@ class UserDoobie[F[_] : Async](implicit val xa: Transactor[F])
   override def userById(id: Int): F[DbResult[User]] =
     processOptSelect(selectById(id).option)(_.toUser, noUserById(id))
 
-  override def updateInfo(id: Int, firstName: Option[String], lastName: Option[String], username: Option[String], email: Option[Email]): F[DbResult[User]] =
-    if(firstName.isEmpty && lastName.isEmpty && username.isEmpty && email.isEmpty)
+  override def updateInfo(id: Int, firstName: Option[String], lastName: Option[String], username: Option[String]): F[DbResult[User]] =
+    if(firstName.isEmpty && lastName.isEmpty && username.isEmpty)
       userById(id)
-    else processSelect(update(id, email.map(_.asString), username, firstName, lastName).note)(_.toUser)
+    else processSelect(update(id, username, firstName, lastName).note)(_.toUser)
 
   override def removeUser(id: Int): F[DbUnit] =
     processUpdate(delete(id))

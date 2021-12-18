@@ -1,7 +1,6 @@
 package ru.skelantros.easymacher.db
 
 import ru.skelantros.easymacher.entities.{Role, User}
-import ru.skelantros.easymacher.utils.Email
 
 object UserDb {
   trait Select[F[_]] {
@@ -16,15 +15,14 @@ object UserDb {
   }
 
   trait Update[F[_]] {
-    def updateInfo(id: Int, firstName: Option[String], lastName: Option[String],
-                   username: Option[String], email: Option[Email]): F[DbResult[User]]
+    def updateInfo(id: Int, firstName: Option[String], lastName: Option[String], username: Option[String]): F[DbResult[User]]
 
     def updateFirstName(id: Int, firstName: String): F[DbResult[User]] =
-      updateInfo(id, Some(firstName), None, None, None)
+      updateInfo(id, Some(firstName), None, None)
     def updateLastName(id: Int, lastName: String): F[DbResult[User]] =
-      updateInfo(id, None, Some(lastName), None, None)
+      updateInfo(id, None, Some(lastName), None)
     def updateUsername(id: Int, username: String): F[DbResult[User]] =
-      updateInfo(id, None, None, Some(username), None)
+      updateInfo(id, None, None, Some(username))
   }
 
   trait Remove[F[_]] {

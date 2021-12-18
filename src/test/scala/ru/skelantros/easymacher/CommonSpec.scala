@@ -7,7 +7,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import ru.skelantros.easymacher.entities.Noun.Gender
 import ru.skelantros.easymacher.entities.{AnyWord, Noun, Role, User, WordGroup}
-import ru.skelantros.easymacher.utils.Email
 
 trait CommonSpec extends AnyFlatSpec with Matchers {
   implicit val runtime: IORuntime = IORuntime.global
