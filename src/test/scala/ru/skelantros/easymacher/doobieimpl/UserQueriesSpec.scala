@@ -13,8 +13,6 @@ class UserQueriesSpec extends AnalyzeSpec {
   test("selectByAdmin") { check(selectByAdmin(true)) }
   test("selectById") { check(selectById(1)) }
   test("update 0") { check(update(1, Some("username"), Some("firstName"), Some("lastName"))) }
-  // test("update 1") { check(update(1, None, None, None, None)) }
-  test("update 2") { check(update(1, None, None, None)) }
   test("update 3") { check(update(1, Some("username"), None, None)) }
   test("update 4") { check(update(1, None, Some("firstName"), None)) }
   test("update 5") { check(update(1, None, None, Some("lastName"))) }
