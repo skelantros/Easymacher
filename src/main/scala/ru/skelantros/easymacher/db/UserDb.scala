@@ -44,5 +44,6 @@ object UserDb {
   trait Auth0[F[_]] {
     def findByAuth0Id(auth0Id: String): F[DbResult[Option[User]]]
     def addByAuth0Id(auth0Id: String): F[DbResult[User]]
+    def addAuth0User(auth0Id: String, username: String, firstName: Option[String], lastName: Option[String]): F[DbResult[User]]
   }
 }

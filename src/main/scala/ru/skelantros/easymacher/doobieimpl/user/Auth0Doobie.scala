@@ -14,4 +14,7 @@ class Auth0Doobie[F[_] : Async](implicit xa: Transactor[F]) extends UserDb.Auth0
 
   override def addByAuth0Id(auth0Id: String): F[DbResult[User]] =
     processSelect(addByAuth0Sub(auth0Id, false).note)(_.toUser)
+
+  override def addAuth0User(auth0Id: String, username: String, firstName: Option[String], lastName: Option[String]): F[DbResult[User]] =
+    processSelect(addByAuth0Info(auth0Id, username, firstName, lastName).note)(_.toUser)
 }

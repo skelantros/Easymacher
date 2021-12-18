@@ -28,4 +28,12 @@ object Auth0Queries extends DoobieLogging {
           values ($auth0Sub, $password, $email, $isAdmin, $curUuid, $isActivated, $auth0Sub)""".update
   }
 
+  def addByAuth0Info(auth0Sub: String, username: String, firstName: Option[String], lastName: Option[String]): Update0 = {
+    val curUuid = uuid
+    val email = s"$curUuid@fromauth0.ru"
+
+    sql"""insert into users(username, passw, email, is_admin, activate_token, is_activated, auth0_sub, first_name, last_name)
+         values ($username, ${""}, $email, ${false}, ${curUuid}, ${true}, $auth0Sub, $firstName, $lastName)
+       """.update
+  }
 }
