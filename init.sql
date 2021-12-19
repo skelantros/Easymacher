@@ -51,3 +51,11 @@ create table groups_to_words(
 	word_id integer not null references words_base on delete cascade,
 	unique (group_id, word_id)
 );
+
+drop role if exists api_role;
+create role api_role with LOGIN;
+grant all privileges on users to api_role;
+grant all privileges on words_base to api_role;
+grant all privileges on words_nouns to api_role;
+grant all privileges on word_groups to api_role;
+grant all privileges on groups_to_words to api_role;
