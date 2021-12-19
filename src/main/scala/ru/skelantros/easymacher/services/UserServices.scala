@@ -7,7 +7,6 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.circe._
 import io.circe.generic.auto._
 import cats.implicits._
-import com.oracle.deploy.update.UpdateInfo
 import ru.skelantros.easymacher.db.DbResult
 import ru.skelantros.easymacher.db.UserDb._
 import ru.skelantros.easymacher.entities.{Role, User}
