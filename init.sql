@@ -17,8 +17,7 @@ create table users(
 	passw varchar(128) not null,
 	first_name varchar(32),
 	last_name varchar(32),
-	is_admin boolean not null,
-	auth0_sub varchar(256) not null unique
+	is_admin boolean not null
 );
 
 create table words_base(

@@ -11,8 +11,7 @@ object UserQueries extends DoobieLogging {
   case class Note(user_id: Int, email: String, username: String, activate_token: String, is_activated: Boolean,
                   passw: String, first_name: Option[String], last_name: Option[String], is_admin: Boolean) {
     def toUser: User =
-      User(user_id, username, Email.unsafe(email), passw, if(is_admin) Role.Admin else Role.User,
-        is_activated, activate_token, first_name, last_name)
+      User(user_id, username, Email.unsafe(email), passw, if(is_admin) Role.Admin else Role.User, is_activated, activate_token, first_name, last_name)
   }
 
   implicit class UpdNote(upd: Update0) {
