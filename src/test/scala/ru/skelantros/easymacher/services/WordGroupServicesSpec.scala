@@ -42,12 +42,14 @@ class WordGroupServicesSpec extends CommonSpec {
   val verbsJson = Json.obj(
     "id" := 1,
     "name" := "verbs",
-    "owner" := 1
+    "owner" := 1,
+    "isShared" := false
   )
   val nounsJson = Json.obj(
     "id" := 2,
     "name" := "nouns",
-    "owner" := 1
+    "owner" := 1,
+    "isShared" := true
   )
 
   val userDb = new UserMock[IO](usersSample)
@@ -121,15 +123,17 @@ class WordGroupServicesSpec extends CommonSpec {
       "name" := "something",
       "isShared" := true
     )
-    val req = Request[IO](method = Method.POST, uri=uri"/word-groups/create").withEntity(body)
-    val actualResp = services.create(skelantros).orNotFound.run(req)
-    check(actualResp, Status.Ok, Some(()))
 
     val result = Json.obj(
       "name" := "something",
       "id" := 3,
-      "owner" := 1
+      "owner" := 1,
+      "isShared" := true
     )
+
+    val req = Request[IO](method = Method.POST, uri=uri"/word-groups/create").withEntity(body)
+    val actualResp = services.create(skelantros).orNotFound.run(req)
+    check(actualResp, Status.Ok, Some(result))
 
     val selectReq = Request[IO](method = Method.GET, uri=uri"/word-groups/3")
     val selectResp = services.byIdVisible(skelantros).orNotFound.run(selectReq)
@@ -185,15 +189,18 @@ class WordGroupServicesSpec extends CommonSpec {
     val body = Json.obj(
       "name" := "watahell"
     )
-    val req = Request[IO](method = Method.POST, uri=uri"/word-groups/1/update").withEntity(body)
-    val actualResp = services.update(skelantros).orNotFound.run(req)
-    check(actualResp, Status.Ok, Some(()))
 
     val newJson = Json.obj(
       "id" := 1,
       "name" := "watahell",
-      "owner" := 1
+      "owner" := 1,
+      "isShared" := false
     )
+
+    val req = Request[IO](method = Method.POST, uri=uri"/word-groups/1/update").withEntity(body)
+    val actualResp = services.update(skelantros).orNotFound.run(req)
+    check(actualResp, Status.Ok, Some(newJson))
+
     val selectReq = Request[IO](method = Method.GET, uri=uri"/word-groups/1")
     val selectResp = services.byIdVisible(skelantros).orNotFound.run(selectReq)
     check(selectResp, Status.Ok, Some(newJson))

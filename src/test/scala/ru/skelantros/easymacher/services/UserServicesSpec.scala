@@ -200,7 +200,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
     // check if user has been changed in DB
-    db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head.copy(username = "Skel"))
+    db.userById(1).unsafeRunSync() shouldBe DbResult.of(usersSample.head.copy(username = "skel"))
   }
 
   it should "change parameters in transaction (if something goes wrong, nothing changes)" in {
