@@ -5,11 +5,10 @@ import org.http4s.{HttpApp, HttpRoutes}
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.middleware.{CORS, CORSConfig, Logger}
 import ru.skelantros.easymacher.auth.{Auth0Auth, AuthLifter, CryptokeyAuth, UserRoutes}
-import ru.skelantros.easymacher.doobieimpl.flashcard.FlashCardDoobie
 import ru.skelantros.easymacher.doobieimpl.group.WordGroupDoobie
 import ru.skelantros.easymacher.doobieimpl.user.{Auth0Doobie, UserDoobie}
 import ru.skelantros.easymacher.doobieimpl.word.WordDoobie
-import ru.skelantros.easymacher.services.{FlashCardServices, UserServices, WordGroupServices, WordServices}
+import ru.skelantros.easymacher.services.{UserServices, WordGroupServices, WordServices}
 import ru.skelantros.easymacher.utils.TransactorImpl
 import cats.implicits._
 import org.http4s.implicits._
@@ -21,13 +20,11 @@ object Auth0Main extends IOApp {
   implicit val userDb = new UserDoobie[IO]
   implicit val wordsDb = new WordDoobie[IO]
   implicit val wordGroupsDb = new WordGroupDoobie[IO]
-  implicit val flashDb = new FlashCardDoobie[IO]
   implicit val authDb = new Auth0Doobie[IO]
 
   val userServices = new UserServices[IO]
   val wordServices = new WordServices[IO]
   val groupServices = new WordGroupServices[IO]
-  val flashServices = new FlashCardServices[IO]
 
   val auth = new Auth0Auth[IO](Auth0Auth.Config("skelantros-test.eu.auth0.com", "http://localhost:8080"))
 
@@ -44,8 +41,7 @@ object Auth0Main extends IOApp {
     wordServices.selectUserServices,
     wordServices.addWord(_),
     wordServices.removeServices,
-    groupServices.allServices,
-    flashServices.allServices
+    groupServices.allServices
   )
 
   val allServices = auth(authNonIdServices) <+> auth(authIdServices)
