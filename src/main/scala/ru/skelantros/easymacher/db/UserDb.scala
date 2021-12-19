@@ -37,7 +37,7 @@ object UserDb {
   }
 
   trait Register[F[_]] {
-    def createUser(username: String, password: String, email: Email, role: Role): F[DbUnit]
+    def createUser(username: String, password: String, email: Email, role: Role): F[DbResult[String]]
     def activateUser(uuid: String): F[DbUnit]
   }
 }

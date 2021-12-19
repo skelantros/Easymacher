@@ -42,7 +42,7 @@ class UserDoobie[F[_] : Async](implicit val xa: Transactor[F])
   private def generateToken: F[String] = Sync[F].blocking(UUID.randomUUID().toString.filter(_ != '-'))
 
   // TODO учесть, что uuid может сгенерироваться не уникальным образом
-  override def createUser(username: String, password: String, email: Email, role: Role): F[DbUnit] = {
+  override def createUser(username: String, password: String, email: Email, role: Role): F[DbResult[String]] = {
     val sqlRequest = for {
       byUsername <- selectByUsername(username).option
       byEmail <- selectByEmail(email.asString).option
@@ -51,12 +51,12 @@ class UserDoobie[F[_] : Async](implicit val xa: Transactor[F])
     for {
       findReq <- sqlRequest.transact(xa)
       res <- findReq match {
-        case (Some(_), _) => DbResult.mistake[Unit](userByUsernameExists(username)).pure[F]
-        case (_, Some(_)) => DbResult.mistake[Unit](userByEmailExists(email)).pure[F]
+        case (Some(_), _) => DbResult.mistake[String](userByUsernameExists(username)).pure[F]
+        case (_, Some(_)) => DbResult.mistake[String](userByEmailExists(email)).pure[F]
         case _ => for {
           token <- generateToken
-          res2 <- processSelect(create(username, password, email.asString, if(role == Role.Admin) true else false, token).note)(_ => ())
-        } yield res2
+          _ <- processSelect(create(username, password, email.asString, if(role == Role.Admin) true else false, token).note)(_ => ())
+        } yield DbResult.of(token)
       }
     } yield res
   }

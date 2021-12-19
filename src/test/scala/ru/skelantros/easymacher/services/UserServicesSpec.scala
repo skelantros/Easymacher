@@ -245,7 +245,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
       "password" := "1234"
     )
     val (actualResp, db) = createUserSampleReq(body)
-    check(actualResp, Status.Ok, Option(()))
+    check(actualResp, Status.Ok, Option("005"))
     // check if user has been created
     val expectedUser = User(5, "alegor", Email("alegor@yandex.ru").get, "1234", Role.User, false, "005")
     db.userById(5).unsafeRunSync() shouldBe DbResult.of(expectedUser)

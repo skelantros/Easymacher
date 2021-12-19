@@ -102,7 +102,7 @@ class UserMock[F[_] : Monad](val init: Seq[User])
   override def updateEmail(id: Int, email: Email): F[DbResult[User]] =
     updateInfo(id, None, None, None, Some(email))
 
-  override def createUser(username: String, password: String, email: Email, role: Role): F[DbUnit] = Monad[F].pure {
+  override def createUser(username: String, password: String, email: Email, role: Role): F[DbResult[String]] = Monad[F].pure {
     if(findByUsername(username).nonEmpty)
       DbResult.mistake(s"User with username '$username' already exists.")
     else if(findByEmail(email).nonEmpty)
@@ -112,7 +112,7 @@ class UserMock[F[_] : Monad](val init: Seq[User])
     else {
       val id = db.map(_.id).max + 1
       db += User(id, username, email, password, Role.User, false, s"00$id", None, None)
-      DbResult.unit
+      DbResult.of(s"00$id")
     }
   }
 
