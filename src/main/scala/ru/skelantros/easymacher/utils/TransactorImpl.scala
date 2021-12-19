@@ -4,11 +4,14 @@ import cats.effect.kernel.Async
 import doobie.util.transactor.Transactor
 
 object TransactorImpl {
-  // TODO переписать реализацию транзактора таким образом, чтобы она подхватывала значения параметров из среды (пока что необязательно)
+  private def dbName = System.getenv("EASYMACHER_DB_NAME")
+  private def dbUser = System.getenv("EASYMACHER_DB_USER")
+  private def dbPassword = System.getenv("EASYMACHER_DB_PASSWORD")
+
   def apply[F[_] : Async]: Transactor[F] = Transactor.fromDriverManager[F](
     "org.postgresql.Driver",
-    "jdbc:postgresql:easymacher",
-    "doobie",
-    "123"
+    s"jdbc:postgresql:$dbName",
+    dbUser,
+    dbPassword
   )
 }
