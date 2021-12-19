@@ -1,6 +1,3 @@
-drop table if exists flash_cards_to_words;
-drop table if exists flash_cards;
-
 drop table if exists groups_to_words;
 drop table if exists word_groups;
 
@@ -49,17 +46,4 @@ create table groups_to_words(
 	group_id integer not null references word_groups on delete cascade,
 	word_id integer not null references words_base on delete cascade,
 	unique (group_id, word_id)
-);
-
-create table flash_cards(
-	cards_id serial primary key,
-	user_id integer not null references users on delete cascade,
-	g_name varchar(256) not null,
-	is_shared boolean not null
-);
-
-create table flash_cards_to_words(
-	cards_id integer not null references flash_cards on delete cascade,
-	word_id integer not null references words_base on delete cascade,
-	unique (cards_id, word_id)
 );

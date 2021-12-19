@@ -21,11 +21,5 @@ object StatusMessages {
   def wordAleadyInGroup(wordId: Int, groupId: Int): String =
     s"Word with id $wordId already exists in the group with id $groupId."
 
-  def noCardsById(id: Int): String = s"Flash cards group with id $id does not exist."
-  def noAccessToFlashCards(id: Int): String = s"You do not have access to flash cards group with id $id."
-  def cannotEditFlashCards(id: Int): String = s"You cannot edit the flash cards group with id $id."
-  def wordAlreadyInFlashCards(wordId: Int, fcId: Int): String =
-    s"Word with id $wordId already exists in the flash cards group with id $fcId."
-
   val invalidPassword: String = "Invalid password."
 }

@@ -10,7 +10,6 @@ import ru.skelantros.easymacher.entities.{AnyWord, Noun, Word}
 import cats.implicits._
 import doobie.free.connection.ConnectionIO
 import doobie.implicits._
-import ru.skelantros.easymacher.doobieimpl.flashcard.FlashCardQueries
 import ru.skelantros.easymacher.doobieimpl.group.GroupQueries
 
 class WordDoobie[F[_] : Async](implicit xa: Transactor[F], userDb: UserDb.Select[F])
