@@ -54,20 +54,20 @@ class UserMock[F[_] : Monad](val init: Seq[User])
   override def usersByRole(role: Role)(from: Int, count: Int): F[DbResult[Seq[User]]] =
     DbResult.of(db.slice(from, from + count).toSeq).pure[F]
 
-  override def updatePassword(id: Int, oldPassword: String, newPassword: String): F[DbUnit] = Monad[F].pure {
+  override def updatePassword(id: Int, oldPassword: String, newPassword: String): F[DbResult[User]] = Monad[F].pure {
     val userOpt = db.zipWithIndex.find(_._1.id == id)
     userOpt match {
       case Some((user, idx)) =>
         val password = user.password
         if(password == oldPassword) {
           db(idx) = user.copy(password = newPassword)
-          DbResult.unit
+          DbResult.of(db(idx))
         } else DbResult.mistake("Wrong password.")
       case None => DbResult.mistake(s"User with id $id does not exist.")
     }
   }
 
-  override def updateInfo(id: Int, firstName: Option[String], lastName: Option[String], username: Option[String], email: Option[Email]): F[DbUnit] =
+  override def updateInfo(id: Int, firstName: Option[String], lastName: Option[String], username: Option[String], email: Option[Email]): F[DbResult[User]] =
     Monad[F].pure {
       val userOpt = db.zipWithIndex.find(_._1.id == id)
       userOpt match {
@@ -85,21 +85,21 @@ class UserMock[F[_] : Monad](val init: Seq[User])
             }.getOrElse(DbResult.of(user))
           }
           emCh.foreach(db(idx) = _)
-          emCh.map(_ => ())
-        case None => DbResult.mistake[Unit](s"User with id $id does not exist.")
+          emCh
+        case None => DbResult.mistake(s"User with id $id does not exist.")
       }
     }
 
-  override def updateFirstName(id: Int, firstName: String): F[DbUnit] =
+  override def updateFirstName(id: Int, firstName: String): F[DbResult[User]] =
     updateInfo(id, Some(firstName), None, None, None)
 
-  override def updateLastName(id: Int, lastName: String): F[DbUnit] =
+  override def updateLastName(id: Int, lastName: String): F[DbResult[User]] =
     updateInfo(id, None, Some(lastName), None, None)
 
-  override def updateUsername(id: Int, username: String): F[DbUnit] =
+  override def updateUsername(id: Int, username: String): F[DbResult[User]] =
     updateInfo(id, None, None, Some(username), None)
 
-  override def updateEmail(id: Int, email: Email): F[DbUnit] =
+  override def updateEmail(id: Int, email: Email): F[DbResult[User]] =
     updateInfo(id, None, None, None, Some(email))
 
   override def createUser(username: String, password: String, email: Email, role: Role): F[DbUnit] = Monad[F].pure {
