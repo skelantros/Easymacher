@@ -229,7 +229,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   }
 
   def createUserReq(json: Json, db: UserDb.Register[IO]): IO[Response[IO]] = {
-    val req = Request[IO](method = Method.POST, uri=uri"/register").withEntity(json)
+    val req = Request[IO](method = Method.POST, uri=uri"/user/register").withEntity(json)
     val actualResp = services.createUser(db).orNotFound.run(req)
     actualResp
   }
@@ -301,7 +301,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
 
   "activateUser" should "activate users" in {
     implicit val db = sampleMock
-    val req = Request[IO](method = Method.PATCH, uri=uri"/activate?token=004")
+    val req = Request[IO](method = Method.PATCH, uri=uri"/user/activate?token=004")
     val actualResp = services.activateUser.orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
     // check if user has been activated

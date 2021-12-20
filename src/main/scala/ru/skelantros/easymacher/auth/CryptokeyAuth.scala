@@ -66,7 +66,7 @@ class CryptokeyAuth[F[_] : Concurrent](implicit db: Select[F]) extends AuthWare[
     implicit val decoder: EntityDecoder[F, NamePassword] = jsonOf
 
     HttpRoutes.of[F] {
-      case req @ POST -> Root / "login" =>
+      case req @ POST -> Root / "user" / "login" =>
         for {
           namePassword <- req.as[NamePassword]
           NamePassword(name, password) = namePassword

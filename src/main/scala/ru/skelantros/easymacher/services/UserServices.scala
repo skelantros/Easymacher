@@ -111,7 +111,7 @@ class UserServices[F[_] : Concurrent] {
   }
 
   def createUser(implicit db: Register[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case req @ POST -> Root / "register" =>
+    case req @ POST -> Root / "user" / "register" =>
       val body = req.as[CreateUser]
       body.flatMap {
         case CreateUser(username, password, email) =>
@@ -120,7 +120,7 @@ class UserServices[F[_] : Concurrent] {
   }
 
   def activateUser(implicit db: Register[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case PATCH -> Root / "activate" :? ActivateTokenParam(token) =>
+    case PATCH -> Root / "user" / "activate" :? ActivateTokenParam(token) =>
       processDbDef(db.activateUser(token))(identity)
   }
 
