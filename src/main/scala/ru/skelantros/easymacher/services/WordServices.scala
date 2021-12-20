@@ -32,20 +32,24 @@ class WordServices[F[_] : Concurrent] {
   def removeServices(implicit db: Select[F] with Remove[F]): User => HttpRoutes[F] =
     removeWord(_)
 
+  @deprecated
   def all(implicit db: Select[F]) = HttpRoutes.of[F] {
     case GET -> Root / "all-words" =>
       processDbDef(db.allWords)(_ map JsonOut.fromWord)
   }
+
+  @deprecated
   def byId(implicit db: Select[F]) = HttpRoutes.of[F] {
     case GET -> Root / "all-words" :? IdParam(id) =>
       processDbDef(db.wordById(id))(JsonOut.fromWord)
   }
+
   def ofUser(user: User)(implicit db: Select[F]) = HttpRoutes.of[F] {
-    case GET -> Root / "words" =>
+    case GET -> Root / "word" / "all" =>
       processDbDef(db.wordsByUser(user))(_ map JsonOut.fromWord)
   }
   def ofUserById(user: User)(implicit db: Select[F]) = HttpRoutes.of[F] {
-    case GET -> Root / "words" :? IdParam(id) =>
+    case GET -> Root / "word" / IntVar(id) =>
       processDbDef(
         db.wordById(id).map(_.flatMap { w =>
           if(w.owner == user) DbResult.of(w) else DbResult.mistake(noPermission)
@@ -53,7 +57,7 @@ class WordServices[F[_] : Concurrent] {
       )(JsonOut.fromWord)
   }
   def addWord(user: User)(implicit db: AddAny[F] with AddNoun[F]) = HttpRoutes.of[F] {
-    case req @ POST -> Root / "add-word" =>
+    case req @ POST -> Root / "word" =>
       val inp = req.as[JsonIn]
       inp.flatMap { jsonInp =>
         val JsonIn(_, typ, translate, _, plural) = jsonInp
@@ -67,7 +71,7 @@ class WordServices[F[_] : Concurrent] {
       }
   }
   def removeWord(user: User)(implicit db: Select[F] with Remove[F]) = HttpRoutes.of[F] {
-    case POST -> Root / "word" / IntVar(id) / "remove" =>
+    case DELETE -> Root / "word" / IntVar(id) =>
       for {
         wordDb <- db.wordById(id)
         dbReq = wordDb.map { w =>
