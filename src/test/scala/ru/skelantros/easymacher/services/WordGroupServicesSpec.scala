@@ -61,7 +61,7 @@ class WordGroupServicesSpec extends CommonSpec {
   implicit val wordOutSeqDecoder: EntityDecoder[IO, Seq[WordOut]] = jsonOf
 
   val services = new WordGroupServices[IO]
-  val allRequest = Request[IO](method = Method.GET, uri = uri"/word-groups")
+  val allRequest = Request[IO](method = Method.GET, uri = uri"/word-group/all")
 
   "allVisible" should "return all own groups" in {
     implicit val db = groupsMock
@@ -76,42 +76,42 @@ class WordGroupServicesSpec extends CommonSpec {
   }
 
   "byIdVisible" should "return visible group" in {
-    val req = Request[IO](method = Method.GET, uri = uri"/word-groups/2")
+    val req = Request[IO](method = Method.GET, uri = uri"/word-group/2")
     implicit val db = groupsMock
     val actualResp = services.byIdVisible(adefful).orNotFound.run(req)
     check(actualResp, Status.Ok, Some(nounsJson))
   }
 
   it should "not return non-visible groups" in {
-    val req = Request[IO](method = Method.GET, uri = uri"/word-groups/1")
+    val req = Request[IO](method = Method.GET, uri = uri"/word-group/1")
     implicit val db = groupsMock
     val actualResp = services.byIdVisible(adefful).orNotFound.run(req)
     check(actualResp, Status.Forbidden, Some(noAccessToGroup(1)))
   }
 
   it should "not return non-existing group" in {
-    val req = Request[IO](method = Method.GET, uri = uri"/word-groups/3")
+    val req = Request[IO](method = Method.GET, uri = uri"/word-group/3")
     implicit val db = groupsMock
     val actualResp = services.byIdVisible(adefful).orNotFound.run(req)
     check(actualResp, Status.BadRequest, Some(noGroupById(3)))
   }
 
   "wordsOfGroup" should "return words of visible group" in {
-    val req = Request[IO](method = Method.GET, uri = uri"/word-groups/2/words")
+    val req = Request[IO](method = Method.GET, uri = uri"/word-group/2/words")
     implicit val db = groupsMock
     val actualResp = services.wordsOfGroup(adefful).orNotFound.run(req)
     check(actualResp, Status.Ok, Some(Seq(stuhl, fenster, flur).map(WordOut.fromWord)))
   }
 
   it should "not return words of non visible group" in {
-    val req = Request[IO](method = Method.GET, uri = uri"/word-groups/1/words")
+    val req = Request[IO](method = Method.GET, uri = uri"/word-group/1/words")
     implicit val db = groupsMock
     val actualResp = services.wordsOfGroup(adefful).orNotFound.run(req)
     check(actualResp, Status.Forbidden, Some(noAccessToGroup(1)))
   }
 
   it should "not return words of non existing group" in {
-    val req = Request[IO](method = Method.GET, uri = uri"/word-groups/3/words")
+    val req = Request[IO](method = Method.GET, uri = uri"/word-group/3/words")
     implicit val db = groupsMock
     val actualResp = services.wordsOfGroup(adefful).orNotFound.run(req)
     check(actualResp, Status.BadRequest, Some(noGroupById(3)))
@@ -131,11 +131,11 @@ class WordGroupServicesSpec extends CommonSpec {
       "isShared" := true
     )
 
-    val req = Request[IO](method = Method.POST, uri=uri"/word-groups/create").withEntity(body)
+    val req = Request[IO](method = Method.POST, uri=uri"/word-group").withEntity(body)
     val actualResp = services.create(skelantros).orNotFound.run(req)
     check(actualResp, Status.Ok, Some(result))
 
-    val selectReq = Request[IO](method = Method.GET, uri=uri"/word-groups/3")
+    val selectReq = Request[IO](method = Method.GET, uri=uri"/word-group/3")
     val selectResp = services.byIdVisible(skelantros).orNotFound.run(selectReq)
     check(selectResp, Status.Ok, Some(result))
   }
@@ -146,7 +146,7 @@ class WordGroupServicesSpec extends CommonSpec {
     val body = Json.obj(
       "words" := Seq(5)
     )
-    val req = Request[IO](method = Method.POST, uri=uri"/word-groups/1/add-words").withEntity(body)
+    val req = Request[IO](method = Method.PATCH, uri=uri"/word-group/1/words").withEntity(body)
     val actualResp = services.addWords(skelantros).orNotFound.run(req)
     check(actualResp, Status.Ok, Some(()))
 
@@ -156,7 +156,7 @@ class WordGroupServicesSpec extends CommonSpec {
       fensterJson
     )
 
-    val selectReq = Request[IO](method = Method.GET, uri=uri"/word-groups/1/words")
+    val selectReq = Request[IO](method = Method.GET, uri=uri"/word-group/1/words")
     val selectResp = services.wordsOfGroup(skelantros).orNotFound.run(selectReq)
     check(selectResp, Status.Ok, Some(words))
   }
@@ -167,7 +167,7 @@ class WordGroupServicesSpec extends CommonSpec {
     val body = Json.obj(
       "words" := Seq(5)
     )
-    val req = Request[IO](method = Method.POST, uri=uri"/word-groups/1/add-words").withEntity(body)
+    val req = Request[IO](method = Method.PATCH, uri=uri"/word-group/1/words").withEntity(body)
     val actualResp = services.addWords(adefful).orNotFound.run(req)
     check(actualResp, Status.Forbidden, Some(cannotEditGroup(1)))
   }
@@ -178,7 +178,7 @@ class WordGroupServicesSpec extends CommonSpec {
     val body = Json.obj(
       "words" := Seq(5)
     )
-    val req = Request[IO](method = Method.POST, uri=uri"/word-groups/4/add-words").withEntity(body)
+    val req = Request[IO](method = Method.PATCH, uri=uri"/word-group/4/words").withEntity(body)
     val actualResp = services.addWords(adefful).orNotFound.run(req)
     check(actualResp, Status.BadRequest, Some(noGroupById(4)))
   }
@@ -197,11 +197,11 @@ class WordGroupServicesSpec extends CommonSpec {
       "isShared" := false
     )
 
-    val req = Request[IO](method = Method.POST, uri=uri"/word-groups/1/update").withEntity(body)
+    val req = Request[IO](method = Method.PATCH, uri=uri"/word-group/1").withEntity(body)
     val actualResp = services.update(skelantros).orNotFound.run(req)
     check(actualResp, Status.Ok, Some(newJson))
 
-    val selectReq = Request[IO](method = Method.GET, uri=uri"/word-groups/1")
+    val selectReq = Request[IO](method = Method.GET, uri=uri"/word-group/1")
     val selectResp = services.byIdVisible(skelantros).orNotFound.run(selectReq)
     check(selectResp, Status.Ok, Some(newJson))
   }
@@ -212,7 +212,7 @@ class WordGroupServicesSpec extends CommonSpec {
     val body = Json.obj(
       "name" := "watahell"
     )
-    val req = Request[IO](method = Method.POST, uri=uri"/word-groups/1/update").withEntity(body)
+    val req = Request[IO](method = Method.PATCH, uri=uri"/word-group/1").withEntity(body)
     val actualResp = services.update(adefful).orNotFound.run(req)
     check(actualResp, Status.Forbidden, Some(cannotEditGroup(1)))
   }

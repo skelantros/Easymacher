@@ -34,10 +34,10 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
   implicit val seqLightDecoder: EntityDecoder[IO, Seq[UserLight]] = jsonOf
   implicit val optLightDecoder: EntityDecoder[IO, Option[UserLight]] = jsonOf
 
-  val allUsersReq = Request[IO](method = Method.GET, uri = uri"/users")
-  val allUsersByRoleReq = Request[IO](method = Method.GET, uri = uri"/users?role=user")
-  val allAdminsByRoleReq = Request[IO](method = Method.GET, uri = uri"/users?role=admin")
-  val allTrashByRoleReq = Request[IO](method = Method.GET, uri = uri"/users?role=trash")
+  val allUsersReq = Request[IO](method = Method.GET, uri = uri"/user/all")
+  val allUsersByRoleReq = Request[IO](method = Method.GET, uri = uri"/user/all?role=user")
+  val allAdminsByRoleReq = Request[IO](method = Method.GET, uri = uri"/user/all?role=admin")
+  val allTrashByRoleReq = Request[IO](method = Method.GET, uri = uri"/user/all?role=trash")
 
   "An empty User Database" should "not return any users" in {
     implicit val db = sampleMock(Seq())
@@ -75,7 +75,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
 
   it should "ignore input role case" in {
     implicit val db = sampleMock
-    val req = Request[IO](method = Method.GET, uri = uri"/users?role=AdMiN")
+    val req = Request[IO](method = Method.GET, uri = uri"/user/all?role=AdMiN")
     val actualResp = services.allByRole.orNotFound.run(req)
     check(actualResp, Status.Ok,
       Some(usersSample.filter(_.role == Role.Admin).map(UserServices.userLight))
@@ -92,7 +92,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
 
   "byId" should "return existing user" in {
     implicit val db = sampleMock
-    val req = Request[IO](method = Method.GET, uri=uri"/user?id=1")
+    val req = Request[IO](method = Method.GET, uri=uri"/user/1")
     val actualResp = services.byId.orNotFound.run(req)
     check(actualResp, Status.Ok,
       Some(skelantrosJson)
@@ -101,7 +101,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
 
   it should "not return non-existing user" in {
     implicit val db = sampleMock
-    val req = Request[IO](method = Method.GET, uri=uri"/user?id=5")
+    val req = Request[IO](method = Method.GET, uri=uri"/user/5")
     val actualResp = services.byId.orNotFound.run(req)
     check(actualResp, Status.BadRequest,
       Some("User with id 5 does not exist.")
@@ -159,7 +159,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
       "old" := "23052001",
       "new" := "2305"
     )
-    val req = Request[IO](method = Method.POST, uri=uri"/update-password").withEntity(body)
+    val req = Request[IO](method = Method.PATCH, uri=uri"/profile/update-password").withEntity(body)
     val actualResp = services.updatePassword(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
     // check if user has been changed in DB
@@ -172,7 +172,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
       "old" := "2305201",
       "new" := "2305"
     )
-    val req = Request[IO](method = Method.POST, uri=uri"/update-password").withEntity(body)
+    val req = Request[IO](method = Method.PATCH, uri=uri"/profile/update-password").withEntity(body)
     val actualResp = services.updatePassword(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.BadRequest, Option("Wrong password."))
     // check if user has not been changed in DB
@@ -184,7 +184,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     val body = Json.obj(
       "firstName" := "Alexander"
     )
-    val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
+    val req = Request[IO](method = Method.PATCH, uri=uri"/profile/update-info").withEntity(body)
     val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
     // check if user has been changed in DB
@@ -196,7 +196,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     val body = Json.obj {
       "username" := "Skel"
     }
-    val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
+    val req = Request[IO](method = Method.PATCH, uri=uri"/profile/update-info").withEntity(body)
     val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
     // check if user has been changed in DB
@@ -209,7 +209,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
       "username" := "adefful",
       "firstName" := "Alexander"
     )
-    val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
+    val req = Request[IO](method = Method.PATCH, uri=uri"/profile/update-info").withEntity(body)
     val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.BadRequest, Option("User with username 'adefful' already exists."))
     // check if nothing has been changed in DB
@@ -221,7 +221,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
     val body = Json.obj(
       "email" := "skelll@yandex..ru"
     )
-    val req = Request[IO](method = Method.POST, uri=uri"/update-info").withEntity(body)
+    val req = Request[IO](method = Method.PATCH, uri=uri"/profile/update-info").withEntity(body)
     val actualResp = services.updateInfo(usersSample.head).orNotFound.run(req)
     check(actualResp, Status.BadRequest, Option("Incorrect email"))
     // check if nothing has been changed in DB
@@ -301,7 +301,7 @@ class UserServicesSpec extends AnyFlatSpec with CommonSpec {
 
   "activateUser" should "activate users" in {
     implicit val db = sampleMock
-    val req = Request[IO](method = Method.POST, uri=uri"/activate?token=004")
+    val req = Request[IO](method = Method.PATCH, uri=uri"/activate?token=004")
     val actualResp = services.activateUser.orNotFound.run(req)
     check(actualResp, Status.Ok, Option(()))
     // check if user has been activated

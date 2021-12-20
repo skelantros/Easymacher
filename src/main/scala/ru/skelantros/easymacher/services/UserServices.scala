@@ -52,31 +52,31 @@ class UserServices[F[_] : Concurrent] {
     allOffset <+> allByRoleOffset
 
   def all(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root / "users" =>
+    case GET -> Root / "user" / "all" =>
       processDbDef(db.allUsers)(_ map userLight)
   }
 
   def allOffset(implicit db: SelectOffset[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root / "users" :? OffsetParam(offset) :? LimitParam(limit) =>
+    case GET -> Root / "users" / "all" :? OffsetParam(offset) :? LimitParam(limit) =>
       processDbDef(db.allUsers(offset, limit))(_ map userLight)
   }
 
   def allByRole(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root / "users" :? RoleParam(role) =>
+    case GET -> Root / "user" / "all" :? RoleParam(role) =>
       parseRole(role).fold(
         BadRequest(s"Role '$role' does not exist.")
       )(r => processDbDef(db.usersByRole(r))(_ map userLight))
   }
 
   def allByRoleOffset(implicit db: SelectOffset[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root / "users" :? RoleParam(role) :? OffsetParam(offset) :? LimitParam(limit) =>
+    case GET -> Root / "user" / "all" :? RoleParam(role) :? OffsetParam(offset) :? LimitParam(limit) =>
       parseRole(role).fold(
         BadRequest(s"Role '$role' does not exist.")
       )(r => processDbDef(db.usersByRole(r)(offset, limit))(_ map userLight))
   }
 
   def byId(implicit db: Select[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root / "user" :? IdParam(id) =>
+    case GET -> Root / "user" /  IntVar(id) =>
       processDbDef(db.userById(id))(userLight)
   }
 
@@ -98,7 +98,7 @@ class UserServices[F[_] : Concurrent] {
   }
 
   def updatePassword(user: User)(implicit db: Update[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case req @ POST -> Root / "update-password" =>
+    case req @ PATCH -> Root / "profile" / "update-password" =>
       val body = req.as[UpdPassword]
       body.flatMap { updPass =>
         processDbDef(db.updatePassword(user.id, updPass.old, updPass.`new`))(userLight)
@@ -106,7 +106,7 @@ class UserServices[F[_] : Concurrent] {
   }
 
   def updateInfo(user: User)(implicit db: Update[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case req @ POST -> Root / "update-info" =>
+    case req @ PATCH -> Root / "profile" / "update-info" =>
       req.as[UpdInfo].flatMap(updateUserInfo(user, _))
   }
 
@@ -120,12 +120,12 @@ class UserServices[F[_] : Concurrent] {
   }
 
   def activateUser(implicit db: Register[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case POST -> Root / "activate" :? ActivateTokenParam(token) =>
+    case PATCH -> Root / "activate" :? ActivateTokenParam(token) =>
       processDbDef(db.activateUser(token))(identity)
   }
 
   def editUser(u: User)(implicit dbSel: Select[F], dbUpd: Update[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case req @ POST -> Root / "user" / IntVar(id) / "edit" =>
+    case req @ PUT -> Root / "user" / IntVar(id) =>
       for {
         body <- req.as[UpdInfo]
         dbUser <- dbSel.userById(id)
@@ -134,7 +134,7 @@ class UserServices[F[_] : Concurrent] {
   }
 
   def removeUser(u: User)(implicit dbSel: Select[F], dbRem: Remove[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case POST -> Root / "user" / IntVar(id) / "remove" =>
+    case DELETE -> Root / "user" / IntVar(id)  =>
       for {
         toRemoveDb <- dbSel.userById(id)
         resp <- editAction(toRemoveDb, u)(toRemove => processDbDef(dbRem.removeUser(toRemove.id))(identity))
