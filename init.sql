@@ -50,3 +50,16 @@ create table groups_to_words(
 	word_id integer not null references words_base on delete cascade,
 	unique (group_id, word_id)
 );
+
+drop role if exists api_role;
+create role api_role with LOGIN;
+grant all privileges on users to api_role;
+grant all privileges on words_base to api_role;
+grant all privileges on words_nouns to api_role;
+grant all privileges on word_groups to api_role;
+grant all privileges on groups_to_words to api_role;
+
+\set api_username `echo "$EASYMACHER_DB_USER"`
+\set api_password `echo "$EASYMACHER_DB_PASSWORD"`
+create user :api_username with in role api_role;
+alter user :api_username password :'api_password';

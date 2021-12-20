@@ -49,19 +49,11 @@ object CryptokeyMain extends IOApp {
 
   val allServices = unauthServices <+> auth(authNonIdServices) <+> auth(authIdServices)
 
-  val corsConfig = CORSConfig.default
-    .withAnyOrigin(false)
-    .withAllowedOrigins(Set("http://localhost:3000"))
-    .withAnyMethod(true)
-    .withAllowCredentials(true)
-
-  val cors: HttpRoutes[IO] = CORS(allServices, corsConfig)
-
-  val app: HttpApp[IO] = cors.orNotFound
+  val app: HttpApp[IO] = allServices.orNotFound
 
   override def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO](global)
-      .bindHttp(8080, "localhost")
+      .bindHttp(8080, "0.0.0.0")
       .withHttpApp(app)
       .serve
       .compile
