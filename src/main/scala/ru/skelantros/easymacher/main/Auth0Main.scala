@@ -4,9 +4,9 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.http4s.{HttpApp, HttpRoutes}
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.middleware.{CORS, CORSConfig, Logger}
-import ru.skelantros.easymacher.auth.{Auth0Auth, AuthLifter, CryptokeyAuth, UserRoutes}
+import ru.skelantros.easymacher.auth.{Auth0Auth, AuthLifter, UserRoutes}
 import ru.skelantros.easymacher.doobieimpl.group.WordGroupDoobie
-import ru.skelantros.easymacher.doobieimpl.user.{Auth0Doobie, UserDoobie}
+import ru.skelantros.easymacher.doobieimpl.user.{UserDoobie}
 import ru.skelantros.easymacher.doobieimpl.word.WordDoobie
 import ru.skelantros.easymacher.services.{UserServices, WordGroupServices, WordServices}
 import ru.skelantros.easymacher.utils.TransactorImpl
@@ -20,13 +20,12 @@ object Auth0Main extends IOApp {
   implicit val userDb = new UserDoobie[IO]
   implicit val wordsDb = new WordDoobie[IO]
   implicit val wordGroupsDb = new WordGroupDoobie[IO]
-  implicit val authDb = new Auth0Doobie[IO]
 
   val userServices = new UserServices[IO]
   val wordServices = new WordServices[IO]
   val groupServices = new WordGroupServices[IO]
 
-  val auth = new Auth0Auth[IO](Auth0Auth.Config("skelantros-test.eu.auth0.com", "http://localhost:8080"))
+  val auth = new Auth0Auth[IO](Auth0Auth.Config("skelantros-test.eu.auth0.com", "https://easymacherapi.herokuapp.com"))
 
   val authNonIdServices: UserRoutes[IO] = AuthLifter(
     userServices.selectServices <+>
@@ -58,7 +57,7 @@ object Auth0Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO](global)
-      .bindHttp(8080, "localhost")
+      .bindHttp(System.getenv("PORT").toInt, "0.0.0.0")
       .withHttpApp(Logger.httpApp(true, true)(app))
       .serve
       .compile

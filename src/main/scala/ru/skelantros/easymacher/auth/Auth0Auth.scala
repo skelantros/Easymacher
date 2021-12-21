@@ -3,7 +3,7 @@ package ru.skelantros.easymacher.auth
 import java.time.Clock
 
 import cats.data.{EitherT, Kleisli, OptionT}
-import cats.effect.Sync
+import cats.effect.{Async, Concurrent, Sync}
 import com.auth0.jwk.{Jwk, UrlJwkProvider}
 import org.http4s.{AuthedRoutes, HttpRoutes, Request}
 import org.http4s.dsl.Http4sDsl
@@ -14,10 +14,12 @@ import cats.implicits._
 import org.http4s.headers.Cookie
 import org.http4s.server.AuthMiddleware
 import org.typelevel.ci.CIString
+import ru.skelantros.easymacher.auth.auth0.Auth0Client
+import ru.skelantros.easymacher.auth.auth0.Auth0Client.UserInfo
 
 import scala.util.{Failure, Success, Try}
 
-class Auth0Auth[F[_] : Sync](config: Auth0Auth.Config)(implicit db: UserDb.Auth0[F]) extends AuthWare[F] {
+class Auth0Auth[F[_] : Async : Concurrent](config: Auth0Auth.Config)(implicit db: UserDb.Auth0[F]) extends AuthWare[F] {
   import Auth0Auth._
 
   val dsl = new Http4sDsl[F] {}
@@ -48,6 +50,21 @@ class Auth0Auth[F[_] : Sync](config: Auth0Auth.Config)(implicit db: UserDb.Auth0
 
   private implicit def clock = Clock.systemUTC()
 
+  private def getUserInfo(token: String): F[UserInfo] =
+    Auth0Client.makeRequest[F, UserInfo](Auth0Client.userInfoRequest(token, s"https://$domain"))
+
+  private def register(sub: String, token: String): F[Either[String, User]] =
+    for {
+      userInfo <- getUserInfo(token)
+      UserInfo(username, firstName, lastName) = userInfo
+      dbRes <- db.addAuth0User(sub, username, firstName, lastName, isAdmin = false)
+      result = dbRes match {
+        case Right(u) => Right(u)
+        case Left(Mistake(msg)) => Left(msg)
+        case Left(Thr(t)) => Left("1: " + t.toString)
+      }
+    } yield result
+
   private def userFromJwt(token: String): F[Either[String, User]] =
     for {
       jwtClaims <- Sync[F].blocking(validateJwt(token))
@@ -58,11 +75,7 @@ class Auth0Auth[F[_] : Sync](config: Auth0Auth.Config)(implicit db: UserDb.Auth0
           val dbRes = db.findByAuth0Id(sub)
           dbRes.flatMap {
             case Right(Some(u)) => (Right(u) : Either[String, User]).pure[F]
-            case Right(None) => db.addByAuth0Id(sub) map {
-              case Right(u) => Right(u)
-              case Left(Mistake(msg)) => Left(msg)
-              case Left(Thr(t)) => Left("1: " + t.toString)
-            }
+            case Right(None) => register(sub, token)
             case Left(Mistake(msg)) => (Left(msg) : Either[String, User]).pure[F]
             case Left(Thr(t)) => (Left("2: " + t.toString) : Either[String, User]).pure[F]
           }
@@ -96,8 +109,6 @@ class Auth0Auth[F[_] : Sync](config: Auth0Auth.Config)(implicit db: UserDb.Auth0
     } else {
       Failure(new Exception("The JWT did not pass validation"))
     }
-
-
 }
 
 object Auth0Auth {
