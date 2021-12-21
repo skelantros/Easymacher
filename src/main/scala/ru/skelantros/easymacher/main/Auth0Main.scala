@@ -47,7 +47,7 @@ object Auth0Main extends IOApp {
 
   val corsConfig = CORSConfig.default
     .withAnyOrigin(false)
-    .withAllowedOrigins(Set("http://localhost:3000"))
+    .withAllowedOrigins(Set("http://localhost:3000", "https://green-mushroom-0d110c703.azurestaticapps.net"))
     .withAnyMethod(true)
     .withAllowCredentials(true)
 
