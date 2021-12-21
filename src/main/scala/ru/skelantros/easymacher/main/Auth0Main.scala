@@ -25,7 +25,7 @@ object Auth0Main extends IOApp {
   val wordServices = new WordServices[IO]
   val groupServices = new WordGroupServices[IO]
 
-  val auth = new Auth0Auth[IO](Auth0Auth.Config("skelantros-test.eu.auth0.com", "http://localhost:8080"))
+  val auth = new Auth0Auth[IO](Auth0Auth.Config("skelantros-test.eu.auth0.com", "https://easymacherapi.herokuapp.com"))
 
   val authNonIdServices: UserRoutes[IO] = AuthLifter(
     userServices.selectServices <+>
@@ -57,7 +57,7 @@ object Auth0Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO](global)
-      .bindHttp(8080, "localhost")
+      .bindHttp(System.getenv("PORT").toInt, "0.0.0.0")
       .withHttpApp(Logger.httpApp(true, true)(app))
       .serve
       .compile

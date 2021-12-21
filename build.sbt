@@ -4,6 +4,8 @@ version := "0.1"
 
 scalaVersion := "2.13.7"
 
+enablePlugins(JavaAppPackaging)
+
 val http4sVersion = "0.23.0-RC1"
 lazy val http4sDependencies = Seq(
   "org.http4s" %% "http4s-dsl" % http4sVersion,
