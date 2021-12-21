@@ -1,0 +1,133 @@
+<ISSPECS>
+	<DESCRIPTION>
+		<TITLE>Easymacher API</TITLE>
+		<SUBJ>API для построения приложений для изучения немецкого языка.</SUBJ>
+	</DESCRIPTION>
+	<DATA>
+		<ENTITY ent_id="users">
+			<PROPERTY>user_id</PROPERTY>
+			<PROPERTY>email</PROPERTY>
+			<PROPERTY>username</PROPERTY>
+			<PROPERTY>activate_token</PROPERTY>
+			<PROPERTY>is_activated</PROPERTY>
+			<PROPERTY>passw</PROPERTY>
+			<PROPERTY>first_name</PROPERTY>
+			<PROPERTY>last_name</PROPERTY>
+			<PROPERTY>is_admin</PROPERTY>
+		</ENTITY>
+		<ENTITY ent_id="words_base">
+			<PROPERTY>word_id</PROPERTY>
+			<PROPERTY>user_id</PROPERTY>
+			<PROPERTY>word</PROPERTY>
+			<PROPERTY>w_translate</PROPERTY>
+			<PROPERTY>w_info</PROPERTY>
+			<PROPERTY>has_type</PROPERTY>
+		</ENTITY>
+		<ENTITY ent_id="words_nouns">
+			<PROPERTY>noun_id</PROPERTY>
+			<PROPERTY>word_id</PROPERTY>
+			<PROPERTY>plural</PROPERTY>
+			<PROPERTY>n_gender</PROPERTY>
+		</ENTITY>
+		<ENTITY ent_id="word_groups">
+			<PROPERTY>group_id</PROPERTY>
+			<PROPERTY>user_id</PROPERTY>
+			<PROPERTY>g_name</PROPERTY>
+			<PROPERTY>is_shared</PROPERTY>
+		</ENTITY>
+		<ENTITY ent_id="groups_to_words">
+			<PROPERTY>group_id</PROPERTY>
+			<PROPERTY>word_id</PROPERTY>
+		</ENTITY>
+
+		<RELATIONSHIP ent_ids="users words_base">
+			<PROPERTY>user_id</PROPERTY>
+			<PROPERTY>user_id</PROPERTY>
+		</RELATIONSHIP>
+		<RELATIONSHIP ent_ids="words_base words_nouns">
+			<PROPERTY>word_id</PROPERTY>
+			<PROPERTY>word_id</PROPERTY>
+		</RELATIONSHIP>
+		<RELATIONSHIP ent_ids="users word_groups">
+			<PROPERTY>user_id</PROPERTY>
+			<PROPERTY>user_id</PROPERTY>
+		</RELATIONSHIP>
+		<RELATIONSHIP ent_ids="word_groups groups_to_words">
+			<PROPERTY>group_id</PROPERTY>
+			<PROPERTY>group_id</PROPERTY>
+		</RELATIONSHIP>
+		<RELATIONSHIP ent_ids="words_base groups_to_words">
+			<PROPERTY>word_id</PROPERTY>
+			<PROPERTY>word_id</PROPERTY>
+		</RELATIONSHIP>
+
+		<CONSTRAINT>
+			users {
+				user_id: primary key,
+				email: not null unique,
+				username: not null unique,
+				activate_token: not null unique,
+				is_activated: not null,
+				passw: not null,
+				is_admin: not null
+			}
+		</CONSTRAINT>
+		<CONSTRAINT>
+			words_base {
+				word_id: primary key,
+				user_id: not null references users on delete cascade,
+				word: not null,
+				has_type: not null
+			}
+		</CONSTRAINT>
+		<CONSTRAINT>
+			words_nouns {
+				noun_id: primary key,
+				word_id: not null references words_base on delete cascade,
+				n_gender: not null
+			}
+		</CONSTRAINT>
+		<CONSTRAINT>
+			word_groups {
+				group_id: primary key,
+				user_id: not null references users on delete cascade,
+				g_name: not null,
+				is_shared: not null
+			}
+		</CONSTRAINT>
+		<CONSTRAINT>
+			groups_to_words {
+				group_id: not null references word_groups on delete cascade,
+				word_id: not null references words_base on delete cascade,
+				unique (group_id, word_id)
+			}
+		</CONSTRAINT>
+	</DATA>
+
+	<ROLES>
+		<ROLE>
+			<TITLE>Суперпользователь</TITLE>
+			<RESPONSIBILITY>Все возможности СУБД</RESPONSIBILITY>
+			<TOTALUSERS>1 (postgres)</TOTALUSERS>
+		</ROLE>
+		<ROLE>
+			<TITLE>APIRole</TITLE>
+			<RESPONSIBILITY>Все возможности работы с данными, хранящимися в таблицах модели.</RESPONSIBILITY>
+			<TOTALUSERS>1 (doobie)</TOTALUSERS>
+		</ROLE>
+	</ROLES>
+
+	<TECHSPEC>
+		<TYPE>API</TYPE>
+		<DEVTOOLS>
+			<DEV>Scala</DEV>
+			<DEV>http4s</DEV>
+			<DEV>doobie</DEV>
+		</DEVTOOLS>
+		<DBMS>
+			<TITLE>Postgres</TITLE>
+			<VERSION>13.0</VERSION>
+			<REASONING>Популярность СУБД, наличие избыточной документации, широкая поддержка.</REASONING>
+		</DBMS>
+	</TECHSPEC>
+</ISSPECS>
