@@ -57,7 +57,7 @@ object Auth0Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO](global)
-      .bindHttp(System.getenv("PORT"), "localhost")
+      .bindHttp(System.getenv("PORT").toInt, "localhost")
       .withHttpApp(Logger.httpApp(true, true)(app))
       .serve
       .compile
