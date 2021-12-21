@@ -1,1 +1,1 @@
-web: target/universal/stage/bin/easymacher
+web: target/universal/stage/bin/easymacher -Dhttp.port=${PORT}
