@@ -6,6 +6,11 @@ scalaVersion := "2.13.7"
 
 enablePlugins(JavaAppPackaging)
 
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
+
 val http4sVersion = "0.23.0-RC1"
 lazy val http4sDependencies = Seq(
   "org.http4s" %% "http4s-dsl" % http4sVersion,
