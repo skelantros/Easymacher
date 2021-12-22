@@ -2,9 +2,9 @@ name: easymacher-docker-heroku CD
 
 on:
   push:
-    branches: [ auth0-docker-version ]
+    branches: [ docker-version ]
   pull_request:
-    branches: [ auth0-docker-version ]
+    branches: [ docker-version ]
 
 #set environment variables
 env:
