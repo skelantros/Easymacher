@@ -6,11 +6,8 @@
 	<DATA>
 		<ENTITY ent_id="users">
 			<PROPERTY>user_id</PROPERTY>
-			<PROPERTY>email</PROPERTY>
+			<PROPERTY>auth0_sub</PROPERTY>
 			<PROPERTY>username</PROPERTY>
-			<PROPERTY>activate_token</PROPERTY>
-			<PROPERTY>is_activated</PROPERTY>
-			<PROPERTY>passw</PROPERTY>
 			<PROPERTY>first_name</PROPERTY>
 			<PROPERTY>last_name</PROPERTY>
 			<PROPERTY>is_admin</PROPERTY>
@@ -64,10 +61,7 @@
 		<CONSTRAINT>
 			users {
 				user_id: primary key,
-				email: not null unique,
-				username: not null unique,
-				activate_token: not null unique,
-				is_activated: not null,
+				auth0_sub: not null unique,
 				passw: not null,
 				is_admin: not null
 			}
@@ -109,11 +103,6 @@
 			<TITLE>Суперпользователь</TITLE>
 			<RESPONSIBILITY>Все возможности СУБД</RESPONSIBILITY>
 			<TOTALUSERS>1 (postgres)</TOTALUSERS>
-		</ROLE>
-		<ROLE>
-			<TITLE>APIRole</TITLE>
-			<RESPONSIBILITY>Все возможности работы с данными, хранящимися в таблицах модели.</RESPONSIBILITY>
-			<TOTALUSERS>1 (doobie)</TOTALUSERS>
 		</ROLE>
 	</ROLES>
 
