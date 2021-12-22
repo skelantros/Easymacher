@@ -25,7 +25,7 @@ object Auth0Main extends IOApp {
   val wordServices = new WordServices[IO]
   val groupServices = new WordGroupServices[IO]
 
-  val auth = new Auth0Auth[IO](Auth0Auth.Config("skelantros-test.eu.auth0.com", "https://easymacherapi.herokuapp.com"))
+  val auth = new Auth0Auth[IO](Auth0Auth.Config("skelantros-test.eu.auth0.com", "https://easymacher.herokuapp.com"))
 
   val authNonIdServices: UserRoutes[IO] = AuthLifter(
     userServices.selectServices <+>
