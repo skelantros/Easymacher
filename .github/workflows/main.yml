@@ -2,9 +2,9 @@ name: easymacher-docker-heroku CD
 
 on:
   push:
-    branches: [ auth0-docker-version ]
+    branches: [ main ]
   pull_request:
-    branches: [ auth0-docker-version ]
+    branches: [ main ]
 
 #set environment variables
 env:
@@ -17,8 +17,9 @@ env:
   APP_NAME: ${{ 'easymacher' }}
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  deploy:
+    name: Deploy to Heroku
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 8
@@ -29,15 +30,6 @@ jobs:
       - name: Run sbt assembly without tests
         run: sbt "set test in assembly := {}" clean assembly
 
-  deploy:
-    name: Deploy to Heroku
-    runs-on: ubuntu-18.04
-    steps:
-
-      # Clone the repository
-      - name: Checkout
-        uses: actions/checkout@v2
-
       # Build Docker image
       - name: Docker build
         run: docker login --username=_ --password=$HEROKU_API_KEY registry.heroku.com
@@ -47,3 +39,6 @@ jobs:
         run: |
           heroku container:push web -a $APP_NAME
           heroku container:release web -a $APP_NAME
+      # Clone the repository
+      - name: Checkout
+        uses: actions/checkout@v2
